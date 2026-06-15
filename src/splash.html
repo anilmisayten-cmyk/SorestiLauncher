@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Soresti</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { 
+      width:100%; height:100vh; overflow:hidden; 
+      background:#000; display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
+    }
+    video {
+      width:100%; height:100%; object-fit:contain;
+      background:#000;
+    }
+    .skip {
+      position:fixed; bottom:20px; right:20px;
+      color:rgba(255,255,255,0.4); font-size:12px;
+      font-family:sans-serif; z-index:10;
+      transition:0.2s;
+    }
+    body:hover .skip { color:rgba(255,255,255,0.8); }
+  </style>
+</head>
+<body>
+  <video id="intro" autoplay muted playsinline></video>
+  <div class="skip">Tıkla geç</div>
+  <script>
+    const params = new URLSearchParams(window.location.search)
+    const videoSrc = params.get('video')
+    const video = document.getElementById('intro')
+    if (videoSrc) video.src = videoSrc
+
+    function done() {
+      try { window.electronAPI?.sendSplashDone() } catch {}
+    }
+
+    video.onended = done
+    video.onclick = function(e) { e.stopPropagation() }
+    document.body.onclick = done
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' || e.key === ' ') done() })
+  </script>
+</body>
+</html>

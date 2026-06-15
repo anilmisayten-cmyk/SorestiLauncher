@@ -1,0 +1,102 @@
+{
+  "name": "soresti-launcher",
+  "version": "1.0.0",
+  "description": "Soresti - A modern Minecraft Launcher",
+  "main": "dist/main/main.js",
+  "author": "Soresti Team",
+  "license": "MIT",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:renderer\" \"npm run dev:main\" \"npm run dev:preload\"",
+    "dev:renderer": "webpack --config webpack.renderer.js --watch --mode development",
+    "dev:main": "webpack --config webpack.main.js --watch --mode development",
+    "dev:preload": "webpack --config webpack.preload.js --watch --mode development",
+    "build": "npm run build:renderer && npm run build:main && npm run build:preload",
+    "build:renderer": "webpack --config webpack.renderer.js --mode production",
+    "build:main": "webpack --config webpack.main.js --mode production",
+    "build:preload": "webpack --config webpack.preload.js --mode production",
+    "start": "npm run build && electron .",
+    "electron": "electron .",
+    "dist": "npm run build && electron-builder --win"
+  },
+  "dependencies": {
+    "@types/adm-zip": "^0.5.8",
+    "adm-zip": "^0.5.17",
+    "axios": "^1.7.2",
+    "framer-motion": "^11.2.10",
+    "lucide-react": "^0.395.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.23.1",
+    "skinview3d": "^3.4.2",
+    "uuid": "^10.0.0",
+    "zustand": "^4.5.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.24.7",
+    "@babel/preset-env": "^7.24.7",
+    "@babel/preset-react": "^7.24.7",
+    "@babel/preset-typescript": "^7.24.7",
+    "@types/node": "^20.14.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@types/uuid": "^10.0.0",
+    "babel-loader": "^9.1.3",
+    "concurrently": "^8.2.2",
+    "css-loader": "^7.1.2",
+    "electron": "^31.0.1",
+    "electron-builder": "^24.13.3",
+    "file-loader": "^6.2.0",
+    "html-webpack-plugin": "^5.6.0",
+    "icojs": "^1.0.0",
+    "png-to-ico": "^3.0.1",
+    "style-loader": "^4.0.0",
+    "typescript": "^5.4.5",
+    "url-loader": "^4.1.1",
+    "webpack": "^5.92.1",
+    "webpack-cli": "^5.1.4"
+  },
+  "build": {
+    "appId": "com.soresti.launcher",
+    "productName": "Soresti Launcher",
+    "copyright": "Copyright © 2024 Soresti Team",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "assets/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Soresti Launcher",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "license": null,
+      "include": "build/installer.nsh"
+    },
+
+    "extraResources": [
+      {
+        "from": "assets/",
+        "to": "assets/",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ]
+  }
+}
