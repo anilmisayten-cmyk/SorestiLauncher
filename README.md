@@ -59,16 +59,16 @@
       <td align="center"><b>Home Page</b></td>
     </tr>
     <tr>
-      <td><img src="assets/sorestilogo.png" alt="Login" width="400"/></td>
-      <td><img src="assets/sorestilogo.png" alt="Home" width="400"/></td>
+      <td><img src="assets/imagesforgit/loginpage.png" alt="Login" width="400"/></td>
+      <td><img src="assets/imagesforgit/homepage.png" alt="Home" width="400"/></td>
     </tr>
     <tr>
       <td align="center"><b>Account Switcher</b></td>
       <td align="center"><b>Version Manager</b></td>
     </tr>
     <tr>
-      <td><img src="assets/sorestilogo.png" alt="Account Switcher" width="400"/></td>
-      <td><img src="assets/sorestilogo.png" alt="Versions" width="400"/></td>
+      <td><img src="assets/imagesforgit/accountswitcher.png" alt="Account Switcher" width="400"/></td>
+      <td><img src="assets/imagesforgit/versionselector.png" alt="Versions" width="400"/></td>
     </tr>
   </table>
 </div>

@@ -27,25 +27,30 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # SignPath ile imzalama (SignPath Foundation onayından sonra aktifleştir)
-      # - name: Submit for signing
-      #   uses: signpath/signpath-github-action@v1
+      - name: Upload unsigned artifact
+        id: upload-unsigned
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-installer
+          path: release/*.exe
+
+      # SignPath Foundation imzalama (onay sonrası aktif)
+      # - name: Submit signing request
+      #   id: sign
+      #   uses: signpath/github-action-submit-signing-request@v2
       #   with:
       #     api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
       #     organization-id: ${{ secrets.SIGNPATH_ORG_ID }}
       #     project-slug: soresti-launcher
       #     signing-policy-slug: release-signing
-      #     input-artifact-path: release/*.exe
-      #     output-artifact-path: release/*-signed.exe
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: installer
-          path: release/*.exe
+      #     github-artifact-id: ${{ steps.upload-unsigned.outputs.artifact-id }}
+      #     wait-for-completion: true
+      #     output-artifact-directory: signed
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: release/*.exe
+          files: |
+            release/*.exe
+            signed/*.exe
           generate_release_notes: true
