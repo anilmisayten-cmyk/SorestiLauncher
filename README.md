@@ -10,26 +10,14 @@
 
 <br/>
 
-<a href="https://github.com/anilmisayten-cmyk/SorestiLauncher/releases">
-  <img src="https://img.shields.io/github/v/release/anilmisayten-cmyk/SorestiLauncher?style=for-the-badge&color=%23ff6b35&label=Version" alt="Release"/>
-</a>
-<a href="https://github.com/anilmisayten-cmyk/SorestiLauncher/blob/main/LICENSE">
-  <img src="https://img.shields.io/github/license/anilmisayten-cmyk/SorestiLauncher?style=for-the-badge&color=%2335a7ff" alt="License"/>
-</a>
-<img src="https://img.shields.io/badge/Windows-x64-%230078D6?style=for-the-badge&logo=windows" alt="Windows"/>
-<img src="https://img.shields.io/github/downloads/anilmisayten-cmyk/SorestiLauncher/total?style=for-the-badge&color=%238a2be2" alt="Downloads"/>
+[![Version](https://img.shields.io/badge/version-1.0.0-orange?style=flat-square&logo=github)](https://github.com/anilmisayten-cmyk/SorestiLauncher/releases)
+[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](https://github.com/anilmisayten-cmyk/SorestiLauncher/blob/main/LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Windows%20x64-0078D6?style=flat-square&logo=windows&logoColor=white)](#)
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.8+-1.21-green?style=flat-square&logo=minecraft&logoColor=white)](#)
 
 <br/>
 
-<p>
-  <a href="#-features">Features</a> •
-  <a href="#-preview">Preview</a> •
-  <a href="#-screenshots">Screenshots</a> •
-  <a href="#-download">Download</a> •
-  <a href="#-quick-start">Quick Start</a> •
-  <a href="#-building-from-source">Build</a> •
-  <a href="#-roadmap">Roadmap</a>
-</p>
+[Features](#-features) • [Preview](#-preview) • [Screenshots](#-screenshots) • [Download](#-download) • [Build](#-building-from-source) • [Roadmap](#-roadmap)
 
 <br/>
 
