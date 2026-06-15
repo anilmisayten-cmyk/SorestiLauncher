@@ -40,7 +40,7 @@
 ## 🎥 Preview
 
 <div align="center">
-  <img src="assets/imagesforgit/soresticnanimdir.gif" alt="Soresti Launcher Demo" width="90%"/>
+  <img src="assets/imagesforgit/newgif.gif" alt="Soresti Launcher Demo" width="90%"/>
   <br/>
   <sub><i>Watch the launcher in action — smooth animations, account switching, version selection, and more.</i></sub>
 </div>
