@@ -33,6 +33,21 @@ export default function App() {
     loadAccounts()
   }, [])
 
+  // Auto-install Minecraft 1.21.4 on first launch
+  useEffect(() => {
+    const install = async () => {
+      try {
+        const installed = await window.electronAPI.getInstalledVersions()
+        if (!installed.includes('1.21.4')) {
+          toast('Minecraft 1.21.4 indiriliyor...', 'info')
+          await window.electronAPI.installVersion('1.21.4')
+          toast('Minecraft 1.21.4 yüklendi!', 'success')
+        }
+      } catch {}
+    }
+    install()
+  }, [])
+
   useEffect(() => {
     if (settings.language && settings.language !== i18n.language) {
       i18n.changeLanguage(settings.language)

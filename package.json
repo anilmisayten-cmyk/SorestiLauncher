@@ -10,10 +10,11 @@
     "dev:renderer": "webpack --config webpack.renderer.js --watch --mode development",
     "dev:main": "webpack --config webpack.main.js --watch --mode development",
     "dev:preload": "webpack --config webpack.preload.js --watch --mode development",
-    "build": "npm run build:renderer && npm run build:main && npm run build:preload",
+    "build": "npm run build:renderer && npm run build:main && npm run build:preload && npm run build:overlay",
     "build:renderer": "webpack --config webpack.renderer.js --mode production",
     "build:main": "webpack --config webpack.main.js --mode production",
     "build:preload": "webpack --config webpack.preload.js --mode production",
+    "build:overlay": "webpack --config webpack.overlay.js --mode production",
     "start": "npm run build && electron .",
     "electron": "electron .",
     "dist": "npm run build && electron-builder --win"
@@ -30,6 +31,7 @@
     "react-dom": "^18.3.1",
     "react-i18next": "^17.0.8",
     "react-router-dom": "^6.23.1",
+    "robotjs": "^0.7.1",
     "skinview3d": "^3.4.2",
     "uuid": "^10.0.0",
     "zustand": "^4.5.2"

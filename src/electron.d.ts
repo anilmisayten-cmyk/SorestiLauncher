@@ -30,5 +30,11 @@ interface Window {
     searchModrinth: (query: string, type: string) => Promise<any>
     getSettings: () => Promise<any>
     saveSettings: (settings: any) => Promise<boolean>
+
+    // Overlay
+    overlayToggle: () => void
+    overlayShow: () => void
+    overlayHide: () => void
+    onOverlayInput: (cb: (data: any) => void) => void
   }
 }

@@ -9,6 +9,10 @@ export interface AppSettings {
   language: string
   showSnapshots: boolean
   closeOnLaunch: boolean
+  overlayEnabled: boolean
+  overlayShowCPS: boolean
+  overlayShowKeystrokes: boolean
+  overlayShowCursor: boolean
 }
 
 function detectLang(): string {
@@ -27,7 +31,11 @@ const defaults: AppSettings = {
   theme: 'dark',
   language: detectLang(),
   showSnapshots: false,
-  closeOnLaunch: false
+  closeOnLaunch: false,
+  overlayEnabled: true,
+  overlayShowCPS: true,
+  overlayShowKeystrokes: true,
+  overlayShowCursor: true
 }
 
 interface SettingsState {

@@ -7,6 +7,7 @@ import { registerDownloadHandlers } from './ipc/download'
 import { registerJavaHandlers } from './ipc/java'
 import { registerSettingsHandlers } from './ipc/settings'
 import { registerModsHandlers } from './ipc/mods'
+import { overlayManager } from './overlay'
 
 let mainWindow: BrowserWindow | null = null
 let splashWindow: BrowserWindow | null = null
@@ -105,6 +106,11 @@ ipcMain.on('open-external', (_event, url: string) => {
   shell.openExternal(url)
 })
 
+// Overlay
+ipcMain.on('overlay:toggle', () => overlayManager.toggle())
+ipcMain.on('overlay:show', () => overlayManager.show())
+ipcMain.on('overlay:hide', () => overlayManager.hide())
+
 // Get app data path
 ipcMain.handle('get-app-data-path', () => {
   return path.join(app.getPath('appData'), 'SorestiLauncher')
@@ -112,10 +118,10 @@ ipcMain.handle('get-app-data-path', () => {
 
 ipcMain.handle('get-app-version', () => app.getVersion())
 
-// Splash video ended or skipped
-ipcMain.on('splash:done', () => {
-  showMainWindow()
-})
+  // Splash video ended or skipped
+  ipcMain.on('splash:done', () => {
+    showMainWindow()
+  })
 
 app.whenReady().then(() => {
   // Ensure app data dir exists
@@ -132,6 +138,7 @@ app.whenReady().then(() => {
   registerJavaHandlers()
   registerSettingsHandlers()
   registerModsHandlers()
+  overlayManager.startShiftWatcher()
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Save, FolderOpen, Cpu, HardDrive, Globe, RefreshCw } from 'lucide-react'
+import { Save, FolderOpen, Cpu, HardDrive, Globe, RefreshCw, Eye, MousePointer, Keyboard, Gamepad2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useSettingsStore } from '../store/settingsStore'
 import { useToast } from '../App'
@@ -198,6 +198,64 @@ export default function SettingsPage() {
               <span className="toggle-slider" />
             </label>
           </div>
+        </div>
+      </div>
+
+      {/* Overlay */}
+      <div className="card">
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Eye size={15} color="var(--accent)" />
+          <span style={{ fontWeight: 700, fontSize: 14 }}>{t('settings.overlay')}</span>
+        </div>
+        <div className="settings-section">
+          <div className="settings-row">
+            <div className="settings-label-group">
+              <div className="settings-label">{t('settings.overlayEnabled')}</div>
+              <div className="settings-desc">{t('settings.overlayEnabledDesc')}</div>
+            </div>
+            <label className="toggle">
+              <input type="checkbox" checked={local.overlayEnabled} onChange={e => update('overlayEnabled', e.target.checked)} />
+              <span className="toggle-slider" />
+            </label>
+          </div>
+          {local.overlayEnabled && <>
+            <div className="settings-row">
+              <div className="settings-label-group">
+                <div className="settings-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <MousePointer size={13} color="var(--accent)" /> {t('settings.overlayCPS')}
+                </div>
+                <div className="settings-desc">{t('settings.overlayCPSDesc')}</div>
+              </div>
+              <label className="toggle">
+                <input type="checkbox" checked={local.overlayShowCPS} onChange={e => update('overlayShowCPS', e.target.checked)} />
+                <span className="toggle-slider" />
+              </label>
+            </div>
+            <div className="settings-row">
+              <div className="settings-label-group">
+                <div className="settings-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Keyboard size={13} color="var(--accent)" /> {t('settings.overlayKeys')}
+                </div>
+                <div className="settings-desc">{t('settings.overlayKeysDesc')}</div>
+              </div>
+              <label className="toggle">
+                <input type="checkbox" checked={local.overlayShowKeystrokes} onChange={e => update('overlayShowKeystrokes', e.target.checked)} />
+                <span className="toggle-slider" />
+              </label>
+            </div>
+            <div className="settings-row">
+              <div className="settings-label-group">
+                <div className="settings-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Gamepad2 size={13} color="var(--accent)" /> {t('settings.overlayCursor')}
+                </div>
+                <div className="settings-desc">{t('settings.overlayCursorDesc')}</div>
+              </div>
+              <label className="toggle">
+                <input type="checkbox" checked={local.overlayShowCursor} onChange={e => update('overlayShowCursor', e.target.checked)} />
+                <span className="toggle-slider" />
+              </label>
+            </div>
+          </>}
         </div>
       </div>
 

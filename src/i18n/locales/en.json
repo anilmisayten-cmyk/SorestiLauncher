@@ -201,7 +201,16 @@
     "language": "Language",
     "languageDesc": "Select launcher interface language",
     "appVersion": "v{{version}} · Electron + React + TypeScript",
-    "github": "GitHub"
+    "github": "GitHub",
+    "overlay": "In-Game Overlay",
+    "overlayEnabled": "Enable Overlay",
+    "overlayEnabledDesc": "Show CPS, keystrokes, and cursor overlay in-game (Right Shift to toggle)",
+    "overlayCPS": "CPS Counter",
+    "overlayCPSDesc": "Show clicks per second counter",
+    "overlayKeys": "Keystroke Display",
+    "overlayKeysDesc": "Show WASD, Space, Shift, E key states",
+    "overlayCursor": "Custom Cursor",
+    "overlayCursorDesc": "Show crosshair and custom cursor overlay"
   },
   "accountSwitcher": {
     "title": "Accounts",

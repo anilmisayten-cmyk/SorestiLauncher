@@ -201,7 +201,16 @@
     "language": "Dil",
     "languageDesc": "Launcher arayüz dilini seçin",
     "appVersion": "v{{version}} · Electron + React + TypeScript",
-    "github": "GitHub"
+    "github": "GitHub",
+    "overlay": "Oyun İçi Overlay",
+    "overlayEnabled": "Overlay Etkin",
+    "overlayEnabledDesc": "Oyun içindeyken CPS, tuş takibi ve cursor overlay'i göster (Sağ Shift ile aç/kapa)",
+    "overlayCPS": "CPS Sayacı",
+    "overlayCPSDesc": "Saniyedeki tıklama sayısını göster",
+    "overlayKeys": "Tuş Göstergesi",
+    "overlayKeysDesc": "WASD, Space, Shift, E tuş durumlarını göster",
+    "overlayCursor": "Custom Cursor",
+    "overlayCursorDesc": "Crosshair ile özel mouse cursor'ı göster"
   },
   "accountSwitcher": {
     "title": "Hesaplar",
