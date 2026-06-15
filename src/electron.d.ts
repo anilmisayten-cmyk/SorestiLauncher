@@ -36,5 +36,9 @@ interface Window {
     overlayShow: () => void
     overlayHide: () => void
     onOverlayInput: (cb: (data: any) => void) => void
+    onOverlayMenu: (cb: (open: boolean) => void) => void
+    getOverlaySettings: () => Promise<any>
+    saveOverlaySettings: (s: any) => Promise<boolean>
+    onOverlaySettingsChanged: (cb: (s: any) => void) => void
   }
 }

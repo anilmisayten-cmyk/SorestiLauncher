@@ -76,6 +76,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   overlayHide: () => ipcRenderer.send('overlay:hide'),
   onOverlayInput: (callback: (data: any) => void) =>
     ipcRenderer.on('overlay:input', (_e, data) => callback(data)),
+  onOverlayMenu: (callback: (open: boolean) => void) =>
+    ipcRenderer.on('overlay:menu', (_e, open) => callback(open)),
+  getOverlaySettings: () => ipcRenderer.invoke('overlay:get-settings'),
+  saveOverlaySettings: (s: any) => ipcRenderer.invoke('overlay:save-settings', s),
+  onOverlaySettingsChanged: (cb: (s: any) => void) =>
+    ipcRenderer.on('overlay:settings-updated', (_e, s) => cb(s)),
 })
 
 interface LaunchOptions {

@@ -1,4 +1,4 @@
-import { BrowserWindow, ipcMain } from 'electron'
+import { BrowserWindow, ipcMain, app } from 'electron'
 import * as path from 'path'
 import * as child_process from 'child_process'
 import * as fs from 'fs'
@@ -34,11 +34,14 @@ while ($true) {
 }
 `
 
+const SETTINGS_PATH = () => path.join(app.getPath('appData'), 'SorestiLauncher', 'settings.json')
+
 export class OverlayManager {
   private overlayWindow: BrowserWindow | null = null
   private inputProcess: child_process.ChildProcess | null = null
   private trackerInterval: NodeJS.Timeout | null = null
   private isVisible = false
+  private menuOpen = false
   private mcBounds: { x: number; y: number; width: number; height: number } | null = null
   private clickTimestamps: number[] = []
   private leftWasDown = false
@@ -65,9 +68,31 @@ export class OverlayManager {
     this.overlayWindow.on('closed', () => { this.overlayWindow = null })
   }
 
-  toggle() {
-    if (!this.overlayWindow) this.createOverlay()
-    this.isVisible ? this.hide() : this.show()
+  toggleMenu() {
+    if (!this.overlayWindow) {
+      this.createOverlay()
+      this.show()
+      setTimeout(() => this.toggleMenu(), 100)
+      return
+    }
+    if (!this.isVisible) {
+      this.show()
+      setTimeout(() => {
+        this.menuOpen = true
+        this.overlayWindow?.webContents.send('overlay:menu', true)
+        this.overlayWindow?.setIgnoreMouseEvents(false)
+        this.sendSettings()
+      }, 100)
+      return
+    }
+    this.menuOpen = !this.menuOpen
+    this.overlayWindow?.webContents.send('overlay:menu', this.menuOpen)
+    if (this.menuOpen) {
+      this.overlayWindow?.setIgnoreMouseEvents(false)
+      this.sendSettings()
+    } else {
+      this.overlayWindow?.setIgnoreMouseEvents(true, { forward: true })
+    }
   }
 
   show() {
@@ -80,9 +105,20 @@ export class OverlayManager {
 
   hide() {
     this.isVisible = false
+    this.menuOpen = false
     this.overlayWindow?.hide()
     this.stopInputMonitor()
     this.stopWindowTracker()
+  }
+
+  sendSettings() {
+    try {
+      const p = SETTINGS_PATH()
+      if (fs.existsSync(p)) {
+        const s = JSON.parse(fs.readFileSync(p, 'utf-8'))
+        this.overlayWindow?.webContents.send('overlay:settings-updated', s)
+      }
+    } catch {}
   }
 
   private startInputMonitor() {
@@ -135,11 +171,11 @@ export class OverlayManager {
       child_process.exec(script, { timeout: 3000 }, (err, stdout) => {
         if (!err && stdout?.trim()) {
           const parts = stdout.trim().split(',').map(Number)
-          if (parts.length === 4) {
-            const newBounds = { x: parts[0], y: parts[1], width: parts[2], height: parts[3] }
+          if (parts.length === 4 && parts[2] > 100 && parts[3] > 100) {
+            const nb = { x: parts[0], y: parts[1], width: parts[2], height: parts[3] }
             const old = this.mcBounds
-            if (!old || old.x !== newBounds.x || old.y !== newBounds.y || old.width !== newBounds.width || old.height !== newBounds.height) {
-              this.mcBounds = newBounds
+            if (!old || old.x !== nb.x || old.y !== nb.y || old.width !== nb.width || old.height !== nb.height) {
+              this.mcBounds = nb
               this.updateOverlayPosition()
             }
           }
@@ -162,7 +198,6 @@ export class OverlayManager {
     })
   }
 
-  // Right Shift watcher - always runs in background
   private shiftProcess: child_process.ChildProcess | null = null
 
   startShiftWatcher() {
@@ -192,7 +227,7 @@ while($true){
       buf += d.toString()
       if (buf.includes('toggle')) {
         buf = ''
-        this.toggle()
+        this.toggleMenu()
       }
     })
     this.shiftProcess.on('exit', () => { this.shiftProcess = null })
@@ -211,3 +246,23 @@ while($true){
 }
 
 export const overlayManager = new OverlayManager()
+
+// Settings IPC
+ipcMain.handle('overlay:get-settings', async () => {
+  try {
+    const p = SETTINGS_PATH()
+    if (fs.existsSync(p)) return JSON.parse(fs.readFileSync(p, 'utf-8'))
+  } catch {}
+  return null
+})
+
+ipcMain.handle('overlay:save-settings', async (_event, settings) => {
+  try {
+    const p = SETTINGS_PATH()
+    fs.writeFileSync(p, JSON.stringify(settings, null, 2))
+    BrowserWindow.getAllWindows().forEach(w => {
+      w.webContents?.send('overlay:settings-updated', settings)
+    })
+    return true
+  } catch { return false }
+})

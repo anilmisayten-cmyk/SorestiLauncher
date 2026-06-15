@@ -13,6 +13,13 @@ export interface AppSettings {
   overlayShowCPS: boolean
   overlayShowKeystrokes: boolean
   overlayShowCursor: boolean
+  overlayCPSPos: { x: number; y: number }
+  overlayCPSScale: number
+  overlayCPSColor: string
+  overlayKeysPos: { x: number; y: number }
+  overlayKeysScale: number
+  overlayKeysColor: string
+  overlayCursorColor: string
 }
 
 function detectLang(): string {
@@ -35,7 +42,14 @@ const defaults: AppSettings = {
   overlayEnabled: true,
   overlayShowCPS: true,
   overlayShowKeystrokes: true,
-  overlayShowCursor: true
+  overlayShowCursor: true,
+  overlayCPSPos: { x: 14, y: 14 },
+  overlayCPSScale: 1,
+  overlayCPSColor: '#ff9800',
+  overlayKeysPos: { x: null, y: 14 },
+  overlayKeysScale: 1,
+  overlayKeysColor: '#ff9800',
+  overlayCursorColor: '#ff9800'
 }
 
 interface SettingsState {
