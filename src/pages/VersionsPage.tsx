@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import { Download, Trash2, Search, RefreshCw, CheckCircle, Filter } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useGameStore } from '../store/gameStore'
 import { useToast } from '../App'
 
@@ -14,13 +15,6 @@ interface VersionManifest {
   versions: VersionEntry[]
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  release: 'Release',
-  snapshot: 'Snapshot',
-  old_beta: 'Beta',
-  old_alpha: 'Alpha'
-}
-
 const TYPE_EMOJIS: Record<string, string> = {
   release: '⛏️',
   snapshot: '🔬',
@@ -28,7 +22,15 @@ const TYPE_EMOJIS: Record<string, string> = {
   old_alpha: '📜'
 }
 
+const TYPE_LABELS: Record<string, string> = {
+  release: 'Release',
+  snapshot: 'Snapshot',
+  old_beta: 'Beta',
+  old_alpha: 'Alpha'
+}
+
 export default function VersionsPage() {
+  const { t } = useTranslation()
   const [manifest, setManifest] = useState<VersionManifest | null>(null)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -56,7 +58,7 @@ export default function VersionsPage() {
       setGlobalDownloading(false)
       setDownloadProgress(null)
       loadInstalledVersions()
-      toast(`${id} başarıyla indirildi!`, 'success')
+      toast(t('versions.downloaded', { id }), 'success')
     })
     return () => {
       window.electronAPI.removeAllListeners('download:progress')
@@ -70,20 +72,20 @@ export default function VersionsPage() {
       const data = await window.electronAPI.getVersionList()
       setManifest(data)
     } catch (err: any) {
-      toast(err.message || 'Versiyon listesi alınamadı', 'error')
+      toast(err.message || t('versions.fetchFailed'), 'error')
     } finally {
       setLoading(false)
     }
   }
 
   const handleInstall = async (versionId: string) => {
-    if (isDownloading) { toast('Zaten bir indirme devam ediyor', 'warning'); return }
+    if (isDownloading) { toast(t('versions.downloadInProgress'), 'warning'); return }
     setDownloading(versionId)
     setGlobalDownloading(true)
     try {
       await window.electronAPI.installVersion(versionId)
     } catch (err: any) {
-      toast(err.message || 'İndirme başarısız', 'error')
+      toast(err.message || t('versions.downloadFailed'), 'error')
       setDownloading(null)
       setGlobalDownloading(false)
     }
@@ -95,9 +97,9 @@ export default function VersionsPage() {
       await window.electronAPI.deleteVersion(versionId)
       await loadInstalledVersions()
       if (selectedVersion === versionId) setSelectedVersion('')
-      toast(`${versionId} silindi`, 'info')
+      toast(t('versions.deleted', { versionId }), 'info')
     } catch {
-      toast('Silme başarısız', 'error')
+      toast(t('versions.deleteFailed'), 'error')
     } finally {
       setDeleting(null)
     }
@@ -105,7 +107,7 @@ export default function VersionsPage() {
 
   const handleSelect = (id: string) => {
     setSelectedVersion(id)
-    toast(`${id} seçildi`, 'success')
+    toast(t('versions.selected', { id }), 'success')
   }
 
   const filtered = useMemo(() => {
@@ -128,14 +130,14 @@ export default function VersionsPage() {
     <div className="page fade-in">
       <div className="page-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
         <div>
-          <div className="page-title">Versiyonlar</div>
+          <div className="page-title">{t('versions.title')}</div>
           <div className="page-subtitle">
-            {manifest ? `${manifest.versions.length} versiyon mevcut` : 'Yükleniyor...'}
-            {' · '}{installedVersions.length} yüklü
+            {manifest ? t('versions.versionsAvailable', { count: manifest.versions.length }) : t('versions.loading')}
+            {' · '}{t('versions.versionsInstalled', { count: installedVersions.length })}
           </div>
         </div>
         <button className="btn btn-secondary" onClick={fetchManifest} disabled={loading}>
-          <RefreshCw size={13} className={loading ? 'spinning' : ''} /> Yenile
+          <RefreshCw size={13} className={loading ? 'spinning' : ''} /> {t('versions.refresh')}
         </button>
       </div>
 
@@ -145,13 +147,13 @@ export default function VersionsPage() {
           style={{ padding: '12px 0', cursor: 'pointer', fontWeight: 600, color: activeTab === 'all' ? 'var(--accent)' : 'var(--text-muted)', borderBottom: activeTab === 'all' ? '2px solid var(--accent)' : '2px solid transparent', transition: 'all 0.2s' }}
           onClick={() => setActiveTab('all')}
         >
-          Tüm Versiyonlar
+          {t('versions.allVersions')}
         </div>
         <div 
           style={{ padding: '12px 0', cursor: 'pointer', fontWeight: 600, color: activeTab === 'installed' ? 'var(--accent)' : 'var(--text-muted)', borderBottom: activeTab === 'installed' ? '2px solid var(--accent)' : '2px solid transparent', transition: 'all 0.2s' }}
           onClick={() => setActiveTab('installed')}
         >
-          Yüklü Sürümler <span style={{ background: 'var(--card-bg)', padding: '2px 8px', borderRadius: 12, fontSize: 11, marginLeft: 6 }}>{installedVersions.length}</span>
+          {t('versions.installed')} <span style={{ background: 'var(--card-bg)', padding: '2px 8px', borderRadius: 12, fontSize: 11, marginLeft: 6 }}>{installedVersions.length}</span>
         </div>
       </div>
 
@@ -160,7 +162,7 @@ export default function VersionsPage() {
         <div className="card card-accent" style={{ padding: '16px 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
             <span className="spinner" />
-            <span style={{ fontWeight: 600 }}>{downloading} indiriliyor</span>
+            <span style={{ fontWeight: 600 }}>{t('versions.downloadCount', { count: downloading })}</span>
             <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--accent)' }}>
               {downloadProgress.percent.toFixed(0)}%
             </span>
@@ -180,7 +182,7 @@ export default function VersionsPage() {
           <Search size={14} className="search-icon" />
           <input
             className="input search-input"
-            placeholder="Versiyon ara..."
+            placeholder={t('versions.searchPlaceholder')}
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -191,7 +193,7 @@ export default function VersionsPage() {
             className={`filter-chip ${filter === f ? 'active' : ''}`}
             onClick={() => setFilter(f)}
           >
-            {f === 'all' ? 'Tümü' : TYPE_LABELS[f]}
+            {f === 'all' ? t('versions.filterAll') : t('versions.type' + (f === 'old_beta' ? 'Beta' : f === 'old_alpha' ? 'Alpha' : f.charAt(0).toUpperCase() + f.slice(1)))}
           </div>
         ))}
       </div>
@@ -200,13 +202,13 @@ export default function VersionsPage() {
       {loading ? (
         <div className="loading-overlay">
           <div className="spinner" />
-          <span>Versiyonlar yükleniyor...</span>
+          <span>{t('versions.loadingVersions')}</span>
         </div>
       ) : filtered.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state-icon">🔍</div>
-          <div className="empty-state-title">Versiyon bulunamadı</div>
-          <div className="empty-state-desc">Arama kriterini değiştirin</div>
+          <div className="empty-state-title">{t('versions.noVersionsFound')}</div>
+          <div className="empty-state-desc">{t('versions.changeSearch')}</div>
         </div>
       ) : (
         <div className="version-list">
@@ -229,8 +231,8 @@ export default function VersionsPage() {
                   <span className={`badge badge-${v.type === 'release' ? 'release' : v.type === 'snapshot' ? 'snapshot' : 'old'}`}>
                     {TYPE_LABELS[v.type]}
                   </span>
-                  {installed && <span className="badge badge-installed">✓ Yüklü</span>}
-                  {isSelected && <span className="badge badge-release">★ Seçili</span>}
+                  {installed && <span className="badge badge-installed">{t('versions.badgeInstalled')}</span>}
+                  {isSelected && <span className="badge badge-release">{t('versions.badgeSelected')}</span>}
                 </div>
                 <div className="version-actions" onClick={e => e.stopPropagation()}>
                   {installed ? (
@@ -238,7 +240,7 @@ export default function VersionsPage() {
                       {!isSelected && (
                         <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: 12 }}
                           onClick={() => handleSelect(v.id)}>
-                          <CheckCircle size={12} /> Seç
+                          <CheckCircle size={12} /> {t('versions.select')}
                         </button>
                       )}
                       <button
@@ -258,7 +260,7 @@ export default function VersionsPage() {
                       disabled={isDownloading}
                     >
                       {isDownl ? <span className="spinner" style={{ width: 12, height: 12 }} /> : <Download size={12} />}
-                      {isDownl ? 'İndiriliyor' : 'İndir'}
+                      {isDownl ? t('versions.downloading') : t('versions.download')}
                     </button>
                   )}
                 </div>

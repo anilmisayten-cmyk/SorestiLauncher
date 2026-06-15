@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { SkinViewer } from 'skinview3d'
+import { useTranslation } from 'react-i18next'
 import { AlertCircle, RefreshCw, User } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 
 export default function SkinPage() {
+  const { t } = useTranslation()
   const { currentAccount } = useAuthStore()
   const viewerRef = useRef<HTMLDivElement>(null)
   const viewerInstance = useRef<SkinViewer | null>(null)
@@ -58,8 +60,8 @@ export default function SkinPage() {
     <div className="page fade-in">
       <div className="page-header">
         <div>
-          <div className="page-title">Karakterin (Skin)</div>
-          <div className="page-subtitle">Hesap adından otomatik skin aranır</div>
+          <div className="page-title">{t('skin.title')}</div>
+          <div className="page-subtitle">{t('skin.subtitle')}</div>
         </div>
       </div>
 
@@ -75,7 +77,7 @@ export default function SkinPage() {
           flexDirection: 'column'
         }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', fontWeight: 600, fontSize: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>3D Önizleme</span>
+            <span>{t('skin.preview3d')}</span>
             {loading && <RefreshCw size={14} style={{ animation: 'spin 1s linear infinite' }} />}
           </div>
           <div ref={viewerRef} style={{ width: 300, height: 400, background: 'linear-gradient(to bottom, #2b303a, #1a1d24)' }} />
@@ -96,7 +98,7 @@ export default function SkinPage() {
               </div>
               <div>
                 <div style={{ fontSize: 20, fontWeight: 700 }}>{currentAccount?.username}</div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Offline Hesap</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('skin.offlineAccount')}</div>
               </div>
             </div>
 
@@ -110,13 +112,13 @@ export default function SkinPage() {
                 <div style={{ fontSize: 13, lineHeight: 1.6 }}>
                   {skinFound ? (
                     <>
-                      <strong>Skin bulundu!</strong><br />
-                      <strong>{currentAccount?.username}</strong> adlı bir premium oyuncunun skini var ve oyununda bu skin yüklendi. Oyun içinde de aynı şekilde görüneceksin!
+                      <strong>{t('skin.skinFound')}</strong><br />
+                      <strong>{currentAccount?.username}</strong> {t('skin.skinFoundDesc')}
                     </>
                   ) : (
                     <>
-                      <strong>Skin bulunamadı.</strong><br />
-                      <strong>{currentAccount?.username}</strong> adında bir premium oyuncu bulunamadı, Steve skini kullanılıyor. Gerçek bir Minecraft oyuncusunun adını kullanırsan onun skiniyle oynarsın!
+                      <strong>{t('skin.skinNotFound')}</strong><br />
+                      <strong>{currentAccount?.username}</strong> {t('skin.skinNotFoundDesc')}
                     </>
                   )}
                 </div>
@@ -124,10 +126,10 @@ export default function SkinPage() {
             </div>
 
             <div style={{ background: 'var(--bg-glass)', borderRadius: 8, padding: 14, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-              <strong><User size={13} style={{ display: 'inline', marginRight: 4 }} />Nasıl çalışır?</strong><br />
-              Launcher, hesap adını Minotar veritabanında arar. Eğer aynı adda bir premium Minecraft oyuncusu varsa, o oyuncunun skini otomatik olarak seninki olur. Herkes seni o skinle görür!
+              <strong><User size={13} style={{ display: 'inline', marginRight: 4 }} />{t('skin.howItWorks')}</strong><br />
+              {t('skin.howItWorksDesc')}
               <br /><br />
-              <strong>Örnek:</strong> Eğer kullanıcı adın <em>"Dream"</em> ise, gerçek Dream'in skiniyle oynarsın!
+              <strong>{t('skin.example')}</strong> {t('skin.exampleText')}
             </div>
           </div>
         </div>

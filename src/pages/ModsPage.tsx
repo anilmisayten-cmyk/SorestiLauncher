@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { Search, Download, Trash2, FolderOpen, Package, Layers, RefreshCw, X, ChevronDown } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useGameStore } from '../store/gameStore'
 import { useToast } from '../App'
 
@@ -34,17 +35,18 @@ interface InstalledMod {
 
 type ActiveTab = 'browse' | 'installed' | 'fabric'
 
-const LOADER_OPTIONS = [
-  { value: 'all', label: 'Tüm Loader\'lar' },
-  { value: 'fabric', label: '🧵 Fabric' },
-  { value: 'forge', label: '⚒️ Forge' },
-  { value: 'quilt', label: '🪡 Quilt' },
-  { value: 'neoforge', label: '🔥 NeoForge' },
+const LOADER_OPTIONS = (t: any) => [
+  { value: 'all', label: t('mods.allLoaders') },
+  { value: 'fabric', label: t('mods.loaderFabric') },
+  { value: 'forge', label: t('mods.loaderForge') },
+  { value: 'quilt', label: t('mods.loaderQuilt') },
+  { value: 'neoforge', label: t('mods.loaderNeoForge') },
 ]
 
 const POPULAR_VERSIONS = ['1.21.4', '1.21.1', '1.20.1', '1.19.4', '1.18.2', '1.16.5', '1.12.2', '1.8.9']
 
 export default function ModsPage() {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<ActiveTab>('browse')
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<ModResult[]>([])
@@ -91,7 +93,7 @@ export default function ModsPage() {
       if (data.fileName?.startsWith('fabric')) {
         setInstallingFabric(null)
         setFabricProgress(0)
-        toast('Fabric kuruldu! Versiyonlar sekmesinde görünecek.', 'success')
+        toast(t('mods.fabricInstalled'), 'success')
       }
     })
     return () => {
@@ -111,7 +113,7 @@ export default function ModsPage() {
       const data = await window.electronAPI.searchMods(q, gameVersion || undefined, loader !== 'all' ? loader : undefined)
       setResults(data?.hits ?? [])
     } catch {
-      toast('Modrinth\'e bağlanılamadı', 'error')
+      toast(t('mods.modrinthError'), 'error')
     } finally {
       setLoading(false)
     }
@@ -133,7 +135,7 @@ export default function ModsPage() {
       setFabricLoaders(loaders ?? [])
     } catch {
       setFabricLoaders([])
-      toast(`Fabric ${fabricGameVersion} için yükleyici bulunamadı`, 'warning')
+      toast(t('mods.fabricLoaderNotFound', { version: fabricGameVersion }), 'warning')
     } finally {
       setLoadingFabric(false)
     }
@@ -151,7 +153,7 @@ export default function ModsPage() {
       )
       setModVersions(versions ?? [])
     } catch {
-      toast('Versiyon bilgisi alınamadı', 'error')
+      toast(t('mods.versionInfoFailed'), 'error')
     } finally {
       setLoadingVersions(false)
     }
@@ -159,18 +161,18 @@ export default function ModsPage() {
 
   const downloadMod = async (version: ModVersion) => {
     const file = version.files.find(f => f.primary) ?? version.files[0]
-    if (!file) { toast('İndirilecek dosya bulunamadı', 'error'); return }
+    if (!file) { toast(t('mods.noFileFound'), 'error'); return }
     setDownloadingMod(file.filename)
     try {
       const result = await window.electronAPI.downloadMod(file.url, file.filename, version.id)
       if (result.alreadyExists) {
-        toast(`${file.filename} zaten kurulu`, 'info')
+        toast(t('mods.alreadyInstalled', { filename: file.filename }), 'info')
       } else {
-        toast(`${file.filename} mods/ klasörüne indirildi!`, 'success')
+        toast(t('mods.downloadedMod', { filename: file.filename }), 'success')
       }
       setSelectedMod(null)
     } catch (e: any) {
-      toast(e.message || 'İndirme başarısız', 'error')
+      toast(e.message || t('mods.downloadFailed'), 'error')
       setDownloadingMod(null)
     }
   }
@@ -178,10 +180,10 @@ export default function ModsPage() {
   const deleteMod = async (fileName: string) => {
     try {
       await window.electronAPI.deleteMod(fileName)
-      toast(`${fileName} silindi`, 'info')
+      toast(t('mods.modDeleted', { fileName }), 'info')
       loadInstalledMods()
     } catch {
-      toast('Silme başarısız', 'error')
+      toast(t('mods.deleteFailed'), 'error')
     }
   }
 
@@ -191,11 +193,11 @@ export default function ModsPage() {
     try {
       const result = await window.electronAPI.installFabric(fabricGameVersion, loaderVersion)
       if (result.alreadyInstalled) {
-        toast('Bu Fabric sürümü zaten kurulu!', 'info')
+        toast(t('mods.fabricAlreadyInstalled'), 'info')
         setInstallingFabric(null)
       }
     } catch (e: any) {
-      toast(e.message || 'Fabric kurulumu başarısız', 'error')
+      toast(e.message || t('mods.fabricInstallFailed'), 'error')
       setInstallingFabric(null)
     }
   }
@@ -217,20 +219,20 @@ export default function ModsPage() {
       {/* Header */}
       <div className="page-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
         <div>
-          <div className="page-title">Modlar</div>
-          <div className="page-subtitle">Modrinth'ten mod indir · Fabric kur · mods/ klasörünü yönet</div>
+          <div className="page-title">{t('mods.title')}</div>
+          <div className="page-subtitle">{t('mods.subtitle')}</div>
         </div>
         <button className="btn btn-secondary" onClick={() => window.electronAPI.openModsFolder()}>
-          <FolderOpen size={13} /> Mods Klasörü
+          <FolderOpen size={13} /> {t('mods.modsFolder')}
         </button>
       </div>
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 24, padding: '0 30px', borderBottom: '1px solid var(--border)', marginBottom: 20 }}>
         {([
-          { id: 'browse', label: '🔍 Mod Ara', icon: null },
-          { id: 'installed', label: `📦 Kurulu (${installedMods.length})`, icon: null },
-          { id: 'fabric', label: '🧵 Fabric Kur', icon: null },
+          { id: 'browse', label: t('mods.search'), icon: null },
+          { id: 'installed', label: t('mods.installedTab', { count: installedMods.length }), icon: null },
+          { id: 'fabric', label: t('mods.installFabric'), icon: null },
         ] as const).map(tab => (
           <div
             key={tab.id}
@@ -255,7 +257,7 @@ export default function ModsPage() {
               <Search size={14} className="search-icon" />
               <input
                 className="input search-input"
-                placeholder="Mod ara... (OptiFine, JEI, Sodium...)"
+                placeholder={t('mods.searchPlaceholder')}
                 value={query}
                 onChange={e => setQuery(e.target.value)}
               />
@@ -266,7 +268,7 @@ export default function ModsPage() {
               value={gameVersion}
               onChange={e => setGameVersion(e.target.value)}
             >
-              <option value="">Tüm Sürümler</option>
+              <option value="">{t('mods.allVersions')}</option>
               {POPULAR_VERSIONS.map(v => <option key={v} value={v}>{v}</option>)}
             </select>
             <select
@@ -275,20 +277,20 @@ export default function ModsPage() {
               value={loader}
               onChange={e => setLoader(e.target.value)}
             >
-              {LOADER_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              {LOADER_OPTIONS(t).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
             <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? <span className="spinner" style={{ width: 13, height: 13 }} /> : <Search size={13} />} Ara
+              {loading ? <span className="spinner" style={{ width: 13, height: 13 }} /> : <Search size={13} />} {t('mods.searchBtn')}
             </button>
           </form>
 
           {loading ? (
-            <div className="loading-overlay"><div className="spinner" /><span>Modrinth aranıyor...</span></div>
+            <div className="loading-overlay"><div className="spinner" /><span>{t('mods.searching')}</span></div>
           ) : results.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state-icon">📭</div>
-              <div className="empty-state-title">Sonuç bulunamadı</div>
-              <div className="empty-state-desc">Farklı bir arama deneyin veya filtreleri temizleyin</div>
+              <div className="empty-state-title">{t('mods.noResults')}</div>
+              <div className="empty-state-desc">{t('mods.changeSearch')}</div>
             </div>
           ) : (
             <div className="mod-grid">
@@ -301,7 +303,7 @@ export default function ModsPage() {
                     }
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div className="mod-name">{mod.title}</div>
-                      <div className="mod-author">by {mod.author}</div>
+                      <div className="mod-author">{t('mods.by')} {mod.author}</div>
                     </div>
                   </div>
                   <div className="mod-desc">{mod.description}</div>
@@ -312,7 +314,7 @@ export default function ModsPage() {
                       style={{ padding: '5px 12px', fontSize: 11 }}
                       onClick={e => { e.stopPropagation(); openModVersions(mod) }}
                     >
-                      <Download size={11} /> İndir
+                      <Download size={11} /> {t('mods.download')}
                     </button>
                   </div>
                 </div>
@@ -326,13 +328,13 @@ export default function ModsPage() {
       {activeTab === 'installed' && (
         <>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>{installedMods.length} mod kurulu · mods/ klasöründe</span>
+            <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>{t('mods.installedInfo', { count: installedMods.length })}</span>
             <div style={{ display: 'flex', gap: 8 }}>
               <button className="btn btn-secondary" onClick={loadInstalledMods} disabled={loadingInstalled}>
-                <RefreshCw size={13} className={loadingInstalled ? 'spinning' : ''} /> Yenile
+                <RefreshCw size={13} className={loadingInstalled ? 'spinning' : ''} /> {t('mods.refresh')}
               </button>
               <button className="btn btn-secondary" onClick={() => window.electronAPI.openModsFolder()}>
-                <FolderOpen size={13} /> Klasörü Aç
+                <FolderOpen size={13} /> {t('mods.openFolder')}
               </button>
             </div>
           </div>
@@ -342,8 +344,8 @@ export default function ModsPage() {
           ) : installedMods.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state-icon">📦</div>
-              <div className="empty-state-title">Kurulu mod yok</div>
-              <div className="empty-state-desc">Mod Ara sekmesinden mod indirebilirsin</div>
+              <div className="empty-state-title">{t('mods.noModsInstalled')}</div>
+              <div className="empty-state-desc">{t('mods.noModsDesc')}</div>
             </div>
           ) : (
             <div className="version-list">
@@ -374,15 +376,14 @@ export default function ModsPage() {
       {activeTab === 'fabric' && (
         <>
           <div className="card" style={{ padding: '16px 20px', marginBottom: 20, background: 'rgba(118,66,138,0.1)', border: '1px solid rgba(118,66,138,0.3)' }}>
-            <div style={{ fontWeight: 600, marginBottom: 6 }}>🧵 Fabric Loader Kurulumu</div>
+            <div style={{ fontWeight: 600, marginBottom: 6 }}>{t('mods.fabricInstallTitle')}</div>
             <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-              Fabric kurduktan sonra Versiyonlar sekmesinde <strong>fabric-loader-x.x.x-1.x.x</strong> adıyla görünecek.
-              Onu seçip Oyna diyebilirsin. Fabric API modunu da Mod Ara sekmesinden indirmen önerilir.
+              {t('mods.fabricInstallDesc')}
             </div>
           </div>
 
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 20 }}>
-            <span style={{ fontWeight: 600, fontSize: 13 }}>Minecraft Sürümü:</span>
+            <span style={{ fontWeight: 600, fontSize: 13 }}>{t('mods.mcVersion')}</span>
             <select
               className="input"
               style={{ width: 160, padding: '0 10px' }}
@@ -392,16 +393,16 @@ export default function ModsPage() {
               {POPULAR_VERSIONS.map(v => <option key={v} value={v}>{v}</option>)}
             </select>
             <button className="btn btn-secondary" onClick={loadFabricLoaders} disabled={loadingFabric}>
-              <RefreshCw size={13} className={loadingFabric ? 'spinning' : ''} /> Yenile
+              <RefreshCw size={13} className={loadingFabric ? 'spinning' : ''} /> {t('mods.refresh')}
             </button>
           </div>
 
           {loadingFabric ? (
-            <div className="loading-overlay"><div className="spinner" /><span>Fabric sürümleri yükleniyor...</span></div>
+            <div className="loading-overlay"><div className="spinner" /><span>{t('mods.fabricLoading')}</span></div>
           ) : fabricLoaders.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state-icon">🧵</div>
-              <div className="empty-state-title">Bu sürüm için Fabric bulunamadı</div>
+              <div className="empty-state-title">{t('mods.fabricNotFound')}</div>
             </div>
           ) : (
             <div className="version-list">
@@ -413,7 +414,7 @@ export default function ModsPage() {
                     <div className="version-icon" style={{ fontSize: 18 }}>🧵</div>
                     <div className="version-info">
                       <div className="version-id">fabric-loader-{lv}</div>
-                      <div className="version-date">Minecraft {fabricGameVersion} {i === 0 ? '· Son Sürüm' : ''}</div>
+                      <div className="version-date">Minecraft {fabricGameVersion} {i === 0 ? t('mods.latestBadge') : ''}</div>
                     </div>
                     <div className="version-actions">
                       {isInstalling && (
@@ -431,8 +432,8 @@ export default function ModsPage() {
                         onClick={() => installFabric(lv)}
                       >
                         {isInstalling
-                          ? <><span className="spinner" style={{ width: 12, height: 12 }} /> Kuruluyor</>
-                          : <><Download size={12} /> Kur</>
+                          ? <><span className="spinner" style={{ width: 12, height: 12 }} /> {t('mods.installing')}</>
+                          : <><Download size={12} /> {t('mods.install')}</>
                         }
                       </button>
                     </div>
@@ -463,7 +464,7 @@ export default function ModsPage() {
               }
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 700, fontSize: 15 }}>{selectedMod.title}</div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>by {selectedMod.author}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('mods.modalBy')} {selectedMod.author}</div>
               </div>
               <button className="btn btn-secondary" style={{ padding: '6px 8px' }} onClick={() => setSelectedMod(null)}>
                 <X size={14} />
@@ -479,8 +480,8 @@ export default function ModsPage() {
               ) : modVersions.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
                   {gameVersion
-                    ? `${gameVersion} için versiyon bulunamadı. Filtre kaldırılsın mı?`
-                    : 'Versiyon bulunamadı'
+                    ? t('mods.modalNoVersionFilter', { gameVersion })
+                    : t('mods.modalNoVersion')
                   }
                 </div>
               ) : (
@@ -515,7 +516,7 @@ export default function ModsPage() {
                         >
                           {isDownloading
                             ? <><span className="spinner" style={{ width: 12, height: 12 }} /> {progress ?? 0}%</>
-                            : <><Download size={12} /> İndir</>
+                            : <><Download size={12} /> {t('mods.modalDownload')}</>
                           }
                         </button>
                       </div>

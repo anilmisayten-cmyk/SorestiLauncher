@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import { MemoryRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import TitleBar from './components/TitleBar'
 import Sidebar from './components/Sidebar'
 import LoginPage from './pages/LoginPage'
@@ -11,6 +12,7 @@ import ConsolePage from './pages/ConsolePage'
 import SkinPage from './pages/SkinPage'
 import { ToastContainer, useToastInternal } from './components/Toast'
 import { useAuthStore } from './store/authStore'
+import { useSettingsStore } from './store/settingsStore'
 
 // Toast context
 export const ToastContext = createContext<{
@@ -24,10 +26,18 @@ export function useToast() {
 export default function App() {
   const { toasts, toast, removeToast } = useToastInternal()
   const { currentAccount, loadAccounts } = useAuthStore()
+  const { settings } = useSettingsStore()
+  const { i18n } = useTranslation()
 
   useEffect(() => {
     loadAccounts()
   }, [])
+
+  useEffect(() => {
+    if (settings.language && settings.language !== i18n.language) {
+      i18n.changeLanguage(settings.language)
+    }
+  }, [settings.language])
 
   const showSidebar = !!currentAccount
 

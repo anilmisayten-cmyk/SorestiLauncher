@@ -1,5 +1,6 @@
 import React from 'react'
 import { UserPlus, LogOut, Check, User, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '../store/authStore'
 import { useToast } from '../App'
 
@@ -9,18 +10,19 @@ interface Props {
 }
 
 export default function AccountSwitcher({ onClose, onAddAccount }: Props) {
+  const { t } = useTranslation()
   const { accounts, currentAccount, setCurrentAccount, removeAccount } = useAuthStore()
   const { toast } = useToast()
 
   const handleSwitch = async (account: any) => {
     setCurrentAccount(account)
-    toast(`${account.username} hesabına geçildi`, 'success')
+    toast(t('accountSwitcher.switched', { username: account.username }), 'success')
     onClose()
   }
 
   const handleRemove = async (uuid: string, username: string) => {
     await removeAccount(uuid)
-    toast(`${username} silindi`, 'info')
+    toast(t('accountSwitcher.deleted', { username }), 'info')
     if (useAuthStore.getState().accounts.length === 0) {
       setCurrentAccount(null)
     }
@@ -30,7 +32,7 @@ export default function AccountSwitcher({ onClose, onAddAccount }: Props) {
     <div className="account-switcher-overlay" onClick={onClose}>
       <div className="account-switcher" onClick={e => e.stopPropagation()}>
         <div className="account-switcher-header">
-          <div className="account-switcher-title">Hesaplar</div>
+          <div className="account-switcher-title">{t('accountSwitcher.title')}</div>
           <button className="btn btn-icon" onClick={onClose} style={{ width: 28, height: 28 }}>
             <X size={14} />
           </button>
@@ -49,7 +51,7 @@ export default function AccountSwitcher({ onClose, onAddAccount }: Props) {
               <div className="account-switcher-info">
                 <div className="account-switcher-name">{account.username}</div>
                 <div className="account-switcher-type">
-                  {account.type === 'elyby' ? 'Ely.by' : account.type === 'microsoft' ? 'Microsoft' : 'Offline'}
+                  {account.type === 'elyby' ? t('sidebar.accountElyby') : account.type === 'microsoft' ? t('sidebar.accountMicrosoft') : t('sidebar.accountOffline')}
                 </div>
               </div>
               {currentAccount?.uuid === account.uuid && (
@@ -60,7 +62,7 @@ export default function AccountSwitcher({ onClose, onAddAccount }: Props) {
                   className="btn btn-icon"
                   onClick={e => { e.stopPropagation(); handleRemove(account.uuid, account.username) }}
                   style={{ width: 26, height: 26, opacity: 0.6 }}
-                  title="Hesabı sil"
+                  title={t('accountSwitcher.deleteTitle')}
                 >
                   <LogOut size={11} />
                 </button>
@@ -71,7 +73,7 @@ export default function AccountSwitcher({ onClose, onAddAccount }: Props) {
 
         <div className="account-switcher-footer">
           <button className="btn btn-secondary" style={{ width: '100%' }} onClick={() => { onClose(); onAddAccount() }}>
-            <UserPlus size={14} /> Hesap Ekle
+            <UserPlus size={14} /> {t('accountSwitcher.addAccount')}
           </button>
         </div>
       </div>

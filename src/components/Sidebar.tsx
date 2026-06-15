@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Home, Layers, Package, Terminal, Settings,
   LogOut, ChevronRight, Cpu, User, UserPlus, ChevronDown
@@ -9,20 +10,8 @@ import { useGameStore } from '../store/gameStore'
 import { useToast } from '../App'
 import AccountSwitcher from './AccountSwitcher'
 
-const navItems = [
-  { path: '/', icon: Home, label: 'Ana Sayfa' },
-  { path: '/versions', icon: Layers, label: 'Versiyonlar' },
-  { path: '/mods', icon: Package, label: 'Modlar' },
-  { path: '/skin', icon: User, label: 'Karakter' },
-  { path: '/console', icon: Terminal, label: 'Konsol' },
-]
-
-const bottomItems = [
-  { path: '/login', icon: UserPlus, label: 'Hesap Ekle' },
-  { path: '/settings', icon: Settings, label: 'Ayarlar' },
-]
-
 export default function Sidebar() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
   const { currentAccount, accounts, setCurrentAccount, removeAccount } = useAuthStore()
@@ -30,13 +19,26 @@ export default function Sidebar() {
   const { toast } = useToast()
   const [showSwitcher, setShowSwitcher] = useState(false)
 
+  const navItems = [
+    { path: '/', icon: Home, label: t('sidebar.home') },
+    { path: '/versions', icon: Layers, label: t('sidebar.versions') },
+    { path: '/mods', icon: Package, label: t('sidebar.mods') },
+    { path: '/skin', icon: User, label: t('sidebar.skin') },
+    { path: '/console', icon: Terminal, label: t('sidebar.console') },
+  ]
+
+  const bottomItems = [
+    { path: '/login', icon: UserPlus, label: t('sidebar.addAccount') },
+    { path: '/settings', icon: Settings, label: t('sidebar.settings') },
+  ]
+
   const handleLogout = async () => {
     if (currentAccount) {
       await removeAccount(currentAccount.uuid)
       if (!useAuthStore.getState().currentAccount) {
         setCurrentAccount(null)
       }
-      toast('Hesaptan çıkıldı', 'info')
+      toast(t('sidebar.loggedOut'), 'info')
     }
   }
 
@@ -45,13 +47,13 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       {/* User */}
-      <div className="sidebar-user" onClick={() => setShowSwitcher(true)} title="Hesap Değiştir">
+      <div className="sidebar-user" onClick={() => setShowSwitcher(true)} title={t('sidebar.switchAccount')}>
         <div className="sidebar-avatar">{avatarLetter}</div>
         <div className="sidebar-user-info">
-          <div className="sidebar-username">{currentAccount?.username ?? 'Bilinmiyor'}</div>
+          <div className="sidebar-username">{currentAccount?.username ?? t('sidebar.unknown')}</div>
           <div className="sidebar-user-type">
             <span>●</span>
-            {currentAccount?.type === 'elyby' ? 'Ely.by' : currentAccount?.type === 'microsoft' ? 'Microsoft' : 'Offline'}
+            {currentAccount?.type === 'elyby' ? t('sidebar.accountElyby') : currentAccount?.type === 'microsoft' ? t('sidebar.accountMicrosoft') : t('sidebar.accountOffline')}
             <span style={{ marginLeft: 'auto', fontSize: 10, opacity: 0.5 }}>▼</span>
           </div>
         </div>
@@ -69,7 +71,7 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="sidebar-nav">
-        <div className="nav-section-label">Menü</div>
+        <div className="nav-section-label">{t('sidebar.menu')}</div>
         {navItems.map(item => (
           <div
             key={item.path}
@@ -87,7 +89,7 @@ export default function Sidebar() {
           </div>
         ))}
 
-        <div className="nav-section-label" style={{ marginTop: 'auto' }}>Sistem</div>
+        <div className="nav-section-label" style={{ marginTop: 'auto' }}>{t('sidebar.system')}</div>
         {bottomItems.map(item => (
           <div
             key={item.path}
@@ -101,7 +103,7 @@ export default function Sidebar() {
       </nav>
 
       <div className="sidebar-footer">
-        <div className="sidebar-version">Soresti Launcher v1.0.0</div>
+        <div className="sidebar-version">{t('app.name')} v1.0.0</div>
       </div>
     </aside>
   )

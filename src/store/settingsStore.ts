@@ -11,13 +11,21 @@ export interface AppSettings {
   closeOnLaunch: boolean
 }
 
+function detectLang(): string {
+  try {
+    const saved = localStorage.getItem('soresti_lang')
+    if (saved === 'en' || saved === 'tr') return saved
+  } catch {}
+  return 'tr'
+}
+
 const defaults: AppSettings = {
   gameDir: '',
   javaPath: 'java',
   maxMemory: 2048,
   minMemory: 512,
   theme: 'dark',
-  language: 'tr',
+  language: detectLang(),
   showSnapshots: false,
   closeOnLaunch: false
 }

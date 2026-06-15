@@ -1,8 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react'
 import { Trash2, Download, Square } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useGameStore } from '../store/gameStore'
 
 export default function ConsolePage() {
+  const { t } = useTranslation()
   const { logs, clearLogs, isRunning } = useGameStore()
   const bottomRef = useRef<HTMLDivElement>(null)
   const [autoScroll, setAutoScroll] = useState(true)
@@ -35,21 +37,21 @@ export default function ConsolePage() {
     <div className="page fade-in" style={{ gap: 16 }}>
       <div className="page-header">
         <div>
-          <div className="page-title">Konsol</div>
+          <div className="page-title">{t('console.title')}</div>
           <div className="page-subtitle">
-            {logs.length} satır · {isRunning ? '🟢 Oyun çalışıyor' : '⚫ Oyun kapalı'}
+            {t('console.lines', { count: logs.length })} · {isRunning ? t('console.running') : t('console.stopped')}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button className="btn btn-secondary" onClick={exportLogs} disabled={logs.length === 0}>
-            <Download size={13} /> Kaydet
+            <Download size={13} /> {t('console.save')}
           </button>
           <button className="btn btn-secondary" onClick={clearLogs} disabled={logs.length === 0}>
-            <Trash2 size={13} /> Temizle
+            <Trash2 size={13} /> {t('console.clear')}
           </button>
           {isRunning && (
             <button className="btn btn-danger" onClick={() => window.electronAPI.killGame()}>
-              <Square size={13} fill="currentColor" /> Durdur
+              <Square size={13} fill="currentColor" /> {t('console.stop')}
             </button>
           )}
         </div>
@@ -60,13 +62,13 @@ export default function ConsolePage() {
           <input type="checkbox" checked={autoScroll} onChange={e => setAutoScroll(e.target.checked)} />
           <span className="toggle-slider" />
         </label>
-        Otomatik kaydır
+        {t('console.autoScroll')}
       </div>
 
       <div className="console" style={{ flex: 1, height: 'auto', minHeight: 400 }}>
         {logs.length === 0 ? (
           <div style={{ color: 'var(--text-muted)', padding: '20px 0', textAlign: 'center' }}>
-            Henüz çıktı yok. Minecraft başlatınca burada görünecek.
+            {t('console.empty')}
           </div>
         ) : (
           logs.map((line, i) => (

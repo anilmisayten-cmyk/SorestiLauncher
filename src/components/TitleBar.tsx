@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { Minus, Square, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import logoImg from '../assets/sorestilogo.png'
 
 export default function TitleBar() {
+  const { t } = useTranslation()
   const [isMax, setIsMax] = useState(false)
 
   useEffect(() => {
@@ -29,13 +31,13 @@ export default function TitleBar() {
       </div>
       <div className="titlebar-drag-area" />
       <div className="titlebar-controls">
-        <button className="titlebar-btn" onClick={() => window.electronAPI.minimize()} title="Küçült">
+        <button className="titlebar-btn" onClick={() => window.electronAPI.minimize()} title={t('titlebar.minimize')}>
           <Minus size={12} />
         </button>
-        <button className="titlebar-btn maximize" onClick={handleMaximize} title={isMax ? 'Geri Al' : 'Büyüt'}>
+        <button className="titlebar-btn maximize" onClick={handleMaximize} title={isMax ? t('titlebar.restore') : t('titlebar.maximize')}>
           <Square size={10} />
         </button>
-        <button className="titlebar-btn close" onClick={() => window.electronAPI.close()} title="Kapat">
+        <button className="titlebar-btn close" onClick={() => window.electronAPI.close()} title={t('titlebar.close')}>
           <X size={12} />
         </button>
       </div>

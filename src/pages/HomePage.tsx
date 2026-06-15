@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { Play, Square, Download, AlertTriangle, Cpu, HardDrive, Clock, Zap } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '../store/authStore'
 import { useGameStore } from '../store/gameStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { useToast } from '../App'
 
 export default function HomePage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { currentAccount } = useAuthStore()
   const {
@@ -31,7 +33,7 @@ export default function HomePage() {
     window.electronAPI.onGameExit((code) => {
       setRunning(false)
       if (playTimer) clearInterval(playTimer)
-      toast(code === 0 ? 'Minecraft kapatıldı' : `Minecraft kapandı (kod: ${code})`, code === 0 ? 'info' : 'warning')
+      toast(code === 0 ? t('home.gameClosed') : t('home.gameClosedWithCode', { code }), code === 0 ? 'info' : 'warning')
     })
     return () => {
       window.electronAPI.removeAllListeners('game:log')
@@ -60,13 +62,13 @@ export default function HomePage() {
     }
 
     if (!selectedVersion) {
-      toast('Bir versiyon seçin', 'warning')
+      toast(t('home.selectVersionFirst'), 'warning')
       navigate('/versions')
       return
     }
 
     if (!javaStatus?.found) {
-      toast('Java bulunamadı! Ayarlar > Java Yolu ayarlayın', 'error')
+      toast(t('home.javaNotFound'), 'error')
       return
     }
     // settings.javaPath yoksa backend kendi otomatik Java'yı (ensureJava) indirecek ve kullanacak.
@@ -90,7 +92,7 @@ export default function HomePage() {
       })
     } catch (err: any) {
       setRunning(false)
-      toast(err.message || 'Oyun başlatılamadı', 'error')
+      toast(err.message || t('home.gameFailed'), 'error')
     }
   }
 
@@ -98,9 +100,9 @@ export default function HomePage() {
     const h = Math.floor(s / 3600)
     const m = Math.floor((s % 3600) / 60)
     const sec = s % 60
-    if (h > 0) return `${h}s ${m}d`
-    if (m > 0) return `${m}d ${sec}s`
-    return `${sec}s`
+    if (h > 0) return t('home.timeHours', { h, m })
+    if (m > 0) return t('home.timeMinutes', { m, sec })
+    return t('home.timeSeconds', { sec })
   }
 
   const displayVersion = selectedVersion || (installedVersions[0] ?? null)
@@ -114,16 +116,16 @@ export default function HomePage() {
         <div className="home-hero-content">
           {displayVersion && (
             <div className="hero-selected-version">
-              <span className="badge badge-release">Seçili</span>
+              <span className="badge badge-release">{t('home.selected')}</span>
               <span>{displayVersion}</span>
             </div>
           )}
           <div className="hero-title">
-            Oynamaya <span>hazır</span><br />
-            mısın?
+            {t('home.heroReady')} <span>{t('home.heroEmphasis')}</span><br />
+            {t('home.heroQuestion')}
           </div>
           <div style={{ color: 'var(--text-secondary)', fontSize: 14, marginTop: 4 }}>
-            {currentAccount?.username} olarak oynuyorsun
+            {t('home.playingAs', { username: currentAccount?.username })}
           </div>
           <div className="hero-actions">
             <button
@@ -131,12 +133,12 @@ export default function HomePage() {
               onClick={handlePlay}
               disabled={isDownloading}
             >
-              {isRunning ? <><Square size={18} fill="white" /> Durdur</> : <><Play size={18} fill="black" /> Oyna</>}
+              {isRunning ? <><Square size={18} fill="white" /> {t('home.stop')}</> : <><Play size={18} fill="black" /> {t('home.play')}</>}
             </button>
 
             {!selectedVersion && (
               <button className="btn btn-secondary" onClick={() => navigate('/versions')}>
-                <Download size={14} /> Versiyon Seç
+                <Download size={14} /> {t('home.selectVersion')}
               </button>
             )}
 
@@ -165,35 +167,35 @@ export default function HomePage() {
           borderRadius: 'var(--radius-md)', color: 'var(--warning)', fontSize: 13
         }}>
           <AlertTriangle size={16} />
-          <span>Belirtilen Özel Java yolu hatalı. Ayarları sıfırlayın veya düzeltin.</span>
+          <span>{t('home.javaPathWarning')}</span>
         </div>
       )}
 
       {/* Stats */}
       <div className="stats-row">
         <div className="card stat-card">
-          <div className="stat-label"><Layers size={11} style={{ display: 'inline', marginRight: 4 }} />Versiyon</div>
+          <div className="stat-label"><Layers size={11} style={{ display: 'inline', marginRight: 4 }} />{t('home.version')}</div>
           <div className="stat-value">{displayVersion ?? '—'}</div>
-          <div className="stat-sub">{installedVersions.length} versiyon yüklü</div>
+          <div className="stat-sub">{t('home.versionsInstalled', { count: installedVersions.length })}</div>
         </div>
         <div className="card stat-card">
-          <div className="stat-label"><Cpu size={11} style={{ display: 'inline', marginRight: 4 }} />Java</div>
+          <div className="stat-label"><Cpu size={11} style={{ display: 'inline', marginRight: 4 }} />{t('home.java')}</div>
           <div className="stat-value" style={{ fontSize: 16 }}>
-            {settings.javaPath ? 'Özel' : 'Otomatik'}
+            {settings.javaPath ? t('home.javaCustom') : t('home.javaAuto')}
           </div>
-          <div className="stat-sub">{settings.javaPath ? 'Manuel Yol' : 'Auto-JRE Aktif'}</div>
+          <div className="stat-sub">{settings.javaPath ? t('home.javaManualPath') : t('home.javaAutoActive')}</div>
         </div>
         <div className="card stat-card">
-          <div className="stat-label"><HardDrive size={11} style={{ display: 'inline', marginRight: 4 }} />RAM</div>
+          <div className="stat-label"><HardDrive size={11} style={{ display: 'inline', marginRight: 4 }} />{t('home.ram')}</div>
           <div className="stat-value">{settings.maxMemory} MB</div>
           <div className="stat-sub">min {settings.minMemory} MB</div>
         </div>
         <div className="card stat-card">
-          <div className="stat-label"><Clock size={11} style={{ display: 'inline', marginRight: 4 }} />Oynama</div>
+          <div className="stat-label"><Clock size={11} style={{ display: 'inline', marginRight: 4 }} />{t('home.playtime')}</div>
           <div className="stat-value" style={{ color: isRunning ? 'var(--accent)' : undefined }}>
             {isRunning ? formatTime(playtime) : '0s'}
           </div>
-          <div className="stat-sub">{isRunning ? '🟢 Oyunda' : 'Beklemede'}</div>
+          <div className="stat-sub">{isRunning ? t('home.statusRunning') : t('home.statusIdle')}</div>
         </div>
       </div>
 
@@ -206,8 +208,8 @@ export default function HomePage() {
               <Layers size={16} color="var(--accent)" />
             </div>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700 }}>Versiyonlar</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{installedVersions.length} yüklü</div>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>{t('home.quickVersions')}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('home.quickVersionsSub', { count: installedVersions.length })}</div>
             </div>
           </div>
         </div>
@@ -218,8 +220,8 @@ export default function HomePage() {
               <Package size={16} color="var(--info)" />
             </div>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700 }}>Modlar</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Modrinth</div>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>{t('home.quickMods')}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('home.quickModsSub')}</div>
             </div>
           </div>
         </div>
@@ -230,8 +232,8 @@ export default function HomePage() {
               <Zap size={16} color="var(--warning)" />
             </div>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700 }}>Konsol</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Oyun çıktısı</div>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>{t('home.quickConsole')}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('home.quickConsoleSub')}</div>
             </div>
           </div>
         </div>

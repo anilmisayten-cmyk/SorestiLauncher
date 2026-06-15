@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { Save, FolderOpen, Cpu, HardDrive, Globe, RefreshCw } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useSettingsStore } from '../store/settingsStore'
 import { useToast } from '../App'
 
 export default function SettingsPage() {
+  const { t, i18n } = useTranslation()
   const { settings, load, save } = useSettingsStore()
   const { toast } = useToast()
   const [local, setLocal] = useState(settings)
@@ -23,9 +25,9 @@ export default function SettingsPage() {
     setSaving(true)
     try {
       await save(local)
-      toast('Ayarlar kaydedildi!', 'success')
+      toast(t('settings.saved'), 'success')
     } catch {
-      toast('Kaydetme başarısız', 'error')
+      toast(t('settings.saveFailed'), 'error')
     } finally {
       setSaving(false)
     }
@@ -43,12 +45,12 @@ export default function SettingsPage() {
     <div className="page fade-in">
       <div className="page-header">
         <div>
-          <div className="page-title">Ayarlar</div>
-          <div className="page-subtitle">Launcher yapılandırması</div>
+          <div className="page-title">{t('settings.title')}</div>
+          <div className="page-subtitle">{t('settings.subtitle')}</div>
         </div>
         <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
           {saving ? <span className="spinner" style={{ width: 14, height: 14 }} /> : <Save size={14} />}
-          Kaydet
+          {t('settings.save')}
         </button>
       </div>
 
@@ -56,24 +58,24 @@ export default function SettingsPage() {
       <div className="card">
         <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
           <FolderOpen size={15} color="var(--accent)" />
-          <span style={{ fontWeight: 700, fontSize: 14 }}>Oyun Klasörü</span>
+          <span style={{ fontWeight: 700, fontSize: 14 }}>{t('settings.gameFolder')}</span>
         </div>
         <div className="settings-section">
           <div>
-            <label className="input-label">Minecraft Klasörü</label>
+            <label className="input-label">{t('settings.mcFolder')}</label>
             <div style={{ display: 'flex', gap: 8 }}>
               <input
                 className="input"
                 value={local.gameDir}
                 onChange={e => update('gameDir', e.target.value)}
-                placeholder={`Varsayılan: ${appDataPath}\\minecraft`}
+                placeholder={t('settings.mcFolderPlaceholder', { path: appDataPath + '\\minecraft' })}
               />
               <button className="btn btn-secondary btn-icon" style={{ width: 40, height: 40 }} onClick={handleBrowseDir}>
                 <FolderOpen size={14} />
               </button>
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
-              Boş bırakırsanız: {appDataPath}\minecraft
+              {t('settings.mcFolderHelp', { path: appDataPath + '\\minecraft' })}
             </div>
           </div>
         </div>
@@ -83,30 +85,30 @@ export default function SettingsPage() {
       <div className="card">
         <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
           <Cpu size={15} color="var(--accent)" />
-          <span style={{ fontWeight: 700, fontSize: 14 }}>Java</span>
+          <span style={{ fontWeight: 700, fontSize: 14 }}>{t('settings.java')}</span>
         </div>
         <div className="settings-section">
           <div>
-            <label className="input-label">Java Yolu</label>
+            <label className="input-label">{t('settings.javaPath')}</label>
             <div style={{ display: 'flex', gap: 8 }}>
               <input
                 className="input"
                 value={local.javaPath}
                 onChange={e => update('javaPath', e.target.value)}
-                placeholder="java (PATH'ten) veya tam yol"
+                placeholder={t('settings.javaPlaceholder')}
                 style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 13 }}
               />
               <button
                 className="btn btn-secondary btn-icon"
                 style={{ width: 40, height: 40 }}
                 onClick={() => window.electronAPI.openExternal('https://adoptium.net/temurin/releases/?version=21')}
-                title="Java İndir"
+                title={t('settings.javaDownload')}
               >
                 <Globe size={14} />
               </button>
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
-              Örn: C:\Program Files\Eclipse Adoptium\jre-21\bin\java.exe
+              {t('settings.javaHelp')}
             </div>
           </div>
         </div>
@@ -116,12 +118,12 @@ export default function SettingsPage() {
       <div className="card">
         <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
           <HardDrive size={15} color="var(--accent)" />
-          <span style={{ fontWeight: 700, fontSize: 14 }}>Bellek (RAM)</span>
+          <span style={{ fontWeight: 700, fontSize: 14 }}>{t('settings.memory')}</span>
         </div>
         <div className="settings-section">
           <div className="range-container">
             <div className="range-header">
-              <label className="input-label" style={{ margin: 0 }}>Maksimum RAM</label>
+              <label className="input-label" style={{ margin: 0 }}>{t('settings.maxRam')}</label>
               <span className="range-value">{local.maxMemory} MB</span>
             </div>
             <input
@@ -137,7 +139,7 @@ export default function SettingsPage() {
           </div>
           <div className="range-container">
             <div className="range-header">
-              <label className="input-label" style={{ margin: 0 }}>Minimum RAM</label>
+              <label className="input-label" style={{ margin: 0 }}>{t('settings.minRam')}</label>
               <span className="range-value">{local.minMemory} MB</span>
             </div>
             <input
@@ -158,13 +160,13 @@ export default function SettingsPage() {
       <div className="card">
         <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
           <RefreshCw size={15} color="var(--accent)" />
-          <span style={{ fontWeight: 700, fontSize: 14 }}>Launcher</span>
+          <span style={{ fontWeight: 700, fontSize: 14 }}>{t('settings.launcher')}</span>
         </div>
         <div className="settings-section">
           <div className="settings-row">
             <div className="settings-label-group">
-              <div className="settings-label">Snapshot Versiyonlar</div>
-              <div className="settings-desc">Versiyon listesinde snapshot versiyonları göster</div>
+              <div className="settings-label">{t('settings.showSnapshots')}</div>
+              <div className="settings-desc">{t('settings.showSnapshotsDesc')}</div>
             </div>
             <label className="toggle">
               <input type="checkbox" checked={local.showSnapshots} onChange={e => update('showSnapshots', e.target.checked)} />
@@ -173,8 +175,23 @@ export default function SettingsPage() {
           </div>
           <div className="settings-row">
             <div className="settings-label-group">
-              <div className="settings-label">Oyun Açılınca Kapat</div>
-              <div className="settings-desc">Minecraft başlatıldığında launcher'ı kapat</div>
+              <div className="settings-label">{t('settings.language')}</div>
+              <div className="settings-desc">{t('settings.languageDesc')}</div>
+            </div>
+            <select
+              className="input"
+              style={{ width: 140, padding: '0 10px', height: 34 }}
+              value={local.language}
+              onChange={e => { const v = e.target.value; update('language', v); i18n.changeLanguage(v) }}
+            >
+              <option value="tr">🇹🇷 Türkçe</option>
+              <option value="en">🇬🇧 English</option>
+            </select>
+          </div>
+          <div className="settings-row">
+            <div className="settings-label-group">
+              <div className="settings-label">{t('settings.closeOnLaunch')}</div>
+              <div className="settings-desc">{t('settings.closeOnLaunchDesc')}</div>
             </div>
             <label className="toggle">
               <input type="checkbox" checked={local.closeOnLaunch} onChange={e => update('closeOnLaunch', e.target.checked)} />
@@ -188,15 +205,15 @@ export default function SettingsPage() {
       <div className="card" style={{ padding: '16px 20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <div style={{ fontWeight: 700 }}>Soresti Launcher</div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>v{appVersion} · Electron + React + TypeScript</div>
+            <div style={{ fontWeight: 700 }}>{t('app.name')}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{t('settings.appVersion', { version: appVersion })}</div>
           </div>
           <button
             className="btn btn-secondary"
             onClick={() => window.electronAPI.openExternal('https://github.com')}
             style={{ fontSize: 12 }}
           >
-            GitHub
+            {t('settings.github')}
           </button>
         </div>
       </div>
