@@ -28,8 +28,8 @@ public class TitleScreenMixin {
                     btn.setMessage(Text.literal("Sunucuya Gir"));
                     ((ButtonWidgetAccessor)btn).setOnPress(b -> {
                         MinecraftClient client = MinecraftClient.getInstance();
-                        ServerInfo info = new ServerInfo("SorestiMC", "play.sorestimc.xyz", ServerInfo.ServerType.OTHER);
-                        ServerAddress addr = ServerAddress.parse("play.sorestimc.xyz");
+                        ServerInfo info = new ServerInfo("SorestiMC", "oyna.sorestimc.xyz", ServerInfo.ServerType.OTHER);
+                        ServerAddress addr = ServerAddress.parse("oyna.sorestimc.xyz");
                         ConnectScreen.connect(screen, client, addr, info, false, new CookieStorage(Collections.<Identifier, byte[]>emptyMap()));
                     });
                     break;

@@ -37,23 +37,17 @@ public class ConfigManager {
     public static class ConfigData {
         public boolean showCPS = true;
         public boolean showKeystrokes = true;
-        public boolean showCursor = true;
+        public boolean showFPS = true;
+        public boolean showPing = true;
         public int cpsX = 14, cpsY = 14;
         public float cpsScale = 1.0f;
         public String cpsColor = "#ff9800";
         public int keysY = 14;
         public float keysScale = 1.0f;
         public String keysColor = "#ff9800";
-        public String cursorColor = "#ff9800";
+        public String fpsColor = "#44ff44";
+        public String pingColor = "#44ff44";
         public boolean rainbow = false;
         public boolean sparkline = true;
-        public boolean showName = true;
-        public int nameX = 14, nameY = 80;
-        public float nameScale = 1.0f;
-        public String nameColor = "#ff9800";
-        public boolean nameRainbow = false;
-        public boolean showOtherNames = false;
-        public String otherNameColor = "#44ff44";
-        public boolean otherNameRainbow = false;
     }
 }

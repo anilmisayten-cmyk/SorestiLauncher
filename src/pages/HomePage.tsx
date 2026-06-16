@@ -25,11 +25,13 @@ export default function HomePage() {
   const [playtime, setPlaytime] = useState(0)
   const [playTimer, setPlayTimer] = useState<NodeJS.Timeout | null>(null)
   const [installing, setInstalling] = useState(false)
+  const [bgVideoPath, setBgVideoPath] = useState('')
 
   useEffect(() => {
     loadInstalledVersions()
     loadSettings()
     checkJava()
+    window.electronAPI.getAssetPath('launcherbg.mp4').then(setBgVideoPath)
 
     window.electronAPI.onGameLog((line) => {
       useGameStore.getState().addLog(line)
@@ -143,8 +145,15 @@ export default function HomePage() {
     <div className="page fade-in">
       {/* Hero */}
       <div className="home-hero">
-        <div className="home-hero-bg" />
-        <div className="home-hero-grid" />
+        <video
+          className="home-hero-video"
+          src={bgVideoPath}
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+        <div className="home-hero-video-overlay" />
         <div className="home-hero-content">
           <div className="hero-selected-version">
             <span className="badge badge-release">Oynanıyor</span>

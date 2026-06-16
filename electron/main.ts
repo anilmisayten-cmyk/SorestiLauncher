@@ -118,6 +118,10 @@ ipcMain.handle('get-app-data-path', () => {
 
 ipcMain.handle('get-app-version', () => app.getVersion())
 
+ipcMain.handle('get-asset-path', (_event, filename: string) => {
+  return path.join(__dirname, '../../assets', filename)
+})
+
   // Splash video ended or skipped
   ipcMain.on('splash:done', () => {
     showMainWindow()

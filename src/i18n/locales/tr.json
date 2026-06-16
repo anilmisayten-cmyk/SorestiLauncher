@@ -145,6 +145,7 @@
     "downloadFailed": "İndirme başarısız",
     "modDeleted": "{{fileName}} silindi",
     "deleteFailed": "Silme başarısız",
+    "bundledMods": "Yerleşik Modlar · Aç/Kapa",
     "modalBy": "by",
     "modalNoVersion": "Versiyon bulunamadı",
     "modalNoVersionFilter": "{{gameVersion}} için versiyon bulunamadı. Filtre kaldırılsın mı?",

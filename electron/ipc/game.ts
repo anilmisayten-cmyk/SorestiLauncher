@@ -348,6 +348,12 @@ export function registerGameHandlers() {
 
       try { extractNatives(resolved, gameDir, nativesDir) } catch (e: any) { log('[Soresti] Native çıkarma hatası (önemsiz): ' + e.message) }
 
+      // Soresti bundled mods sync (enabled → copy, disabled → remove)
+      try {
+        const { syncBundledMods } = require('./mods')
+        if (syncBundledMods) await syncBundledMods()
+      } catch (e: any) { log('[Soresti] Bundled mod sync hatası: ' + e.message) }
+
       const assetIndexId = resolved.assetIndex?.id || versionId
       log('[Soresti] Asset objeleri kontrol ediliyor...')
       await ensureAssets(assetIndexId, gameDir, (pct, current, total) => {
@@ -392,6 +398,7 @@ export function registerGameHandlers() {
         `-Djava.library.path=${nativesDir}`,
         `-Dminecraft.launcher.brand=SorestiLauncher`,
         `-Dminecraft.launcher.version=1.0.0`,
+        `-Djava.net.preferIPv4Stack=true`,
       ]
 
       // Authlib-injector — only for non-offline accounts (offline doesn't need it)

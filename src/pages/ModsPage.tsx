@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Search, Download, Trash2, FolderOpen, Package, Layers, RefreshCw, X, ChevronDown } from 'lucide-react'
+import { Search, Download, Trash2, FolderOpen, Package, Layers, RefreshCw, X, ChevronDown, ToggleLeft, ToggleRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useGameStore } from '../store/gameStore'
 import { useToast } from '../App'
@@ -72,6 +72,10 @@ export default function ModsPage() {
   const [installingFabric, setInstallingFabric] = useState<string | null>(null)
   const [fabricProgress, setFabricProgress] = useState(0)
 
+  // Bundled Soresti mods
+  const [bundledMods, setBundledMods] = useState<BundledModInfo[]>([])
+  const [loadingBundled, setLoadingBundled] = useState(false)
+
   const { installedVersions } = useGameStore()
   const { toast } = useToast()
 
@@ -103,7 +107,7 @@ export default function ModsPage() {
   }, [])
 
   useEffect(() => {
-    if (activeTab === 'installed') loadInstalledMods()
+    if (activeTab === 'installed') { loadInstalledMods(); loadBundledMods() }
     if (activeTab === 'fabric') loadFabricLoaders()
   }, [activeTab, fabricGameVersion])
 
@@ -116,6 +120,25 @@ export default function ModsPage() {
       toast(t('mods.modrinthError'), 'error')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadBundledMods = useCallback(async () => {
+    setLoadingBundled(true)
+    try {
+      const mods = await window.electronAPI.getBundledMods()
+      setBundledMods(mods)
+    } catch {}
+    finally { setLoadingBundled(false) }
+  }, [])
+
+  const toggleBundledMod = async (fileName: string, enabled: boolean) => {
+    try {
+      await window.electronAPI.setBundledModEnabled(fileName, enabled)
+      setBundledMods(prev => prev.map(m => m.fileName === fileName ? { ...m, enabled } : m))
+      toast(`${fileName} ${enabled ? 'etkinleştirildi' : 'devre dışı bırakıldı'}`, 'info')
+    } catch {
+      toast('Değiştirilemedi', 'error')
     }
   }
 
@@ -337,6 +360,47 @@ export default function ModsPage() {
                 <FolderOpen size={13} /> {t('mods.openFolder')}
               </button>
             </div>
+          </div>
+
+          {/* Soresti bundled mods */}
+          {loadingBundled ? (
+            <div className="loading-overlay"><div className="spinner" /></div>
+          ) : bundledMods.length > 0 ? (
+            <div style={{ marginBottom: 24 }}>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12,
+                padding: '10px 16px', background: 'rgba(118,66,138,0.12)',
+                border: '1px solid rgba(118,66,138,0.3)', borderRadius: 'var(--radius-md)'
+              }}>
+                <span style={{ fontWeight: 700, fontSize: 14, color: '#c084fc' }}>✦ Soresti</span>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('mods.bundledMods')}</span>
+              </div>
+              <div className="version-list">
+                {bundledMods.map(mod => (
+                  <div key={mod.fileName} className="version-item">
+                    <div className="version-icon" style={{ fontSize: 18, color: '#c084fc' }}>✦</div>
+                    <div className="version-info">
+                      <div className="version-id" style={{ fontSize: 13 }}>{mod.displayName}</div>
+                      <div className="version-date">{formatSize(mod.size)}</div>
+                    </div>
+                    <div className="version-actions">
+                      <button
+                        className={`btn ${mod.enabled ? 'btn-primary' : 'btn-secondary'}`}
+                        style={{ padding: '6px 12px', fontSize: 12, minWidth: 90 }}
+                        onClick={() => toggleBundledMod(mod.fileName, !mod.enabled)}
+                      >
+                        {mod.enabled ? <><ToggleRight size={13} /> Açık</> : <><ToggleLeft size={13} /> Kapalı</>}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {/* Other installed mods */}
+          <div style={{ marginBottom: 12 }}>
+            <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>{t('mods.installedInfo', { count: installedMods.length })}</span>
           </div>
 
           {loadingInstalled ? (

@@ -219,4 +219,86 @@ export function registerModsHandlers() {
     }
     return { success: false, reason: 'fabric_not_setup' }
   })
+
+  // ─── Bundled Soresti mods management ───
+  function getBundledModsDir(): string {
+    return path.join(__dirname, '../../assets/fabric-setup/mods')
+  }
+
+  function getBundledConfigPath(): string {
+    return path.join(app.getPath('appData'), 'SorestiLauncher', 'bundled-mods.json')
+  }
+
+  function loadBundledConfig(): Record<string, boolean> {
+    const cfgPath = getBundledConfigPath()
+    if (fs.existsSync(cfgPath)) {
+      try {
+        return JSON.parse(fs.readFileSync(cfgPath, 'utf-8'))
+      } catch {}
+    }
+    return {}
+  }
+
+  function saveBundledConfig(cfg: Record<string, boolean>) {
+    fs.writeFileSync(getBundledConfigPath(), JSON.stringify(cfg, null, 2))
+  }
+
+  const SORESTI_MOD_NAMES: Record<string, string> = {
+    'sorestioverlay-1.0.0.jar': 'Soresti Overlay',
+    'sorestioverlay.jar': 'Soresti Overlay',
+    'fabric-api-0.110.0+1.21.4.jar': 'Fabric API',
+    'mininmap.jar': 'Soresti Minimap',
+  }
+
+  ipcMain.handle('mods:get-bundled', async () => {
+    const modsDir = getBundledModsDir()
+    if (!fs.existsSync(modsDir)) return []
+    const cfg = loadBundledConfig()
+    const files = fs.readdirSync(modsDir).filter(f => f.endsWith('.jar') && SORESTI_MOD_NAMES[f])
+    return files.map(f => {
+      const stat = fs.statSync(path.join(modsDir, f))
+      return {
+        fileName: f,
+        displayName: SORESTI_MOD_NAMES[f] || f.replace('.jar', ''),
+        size: stat.size,
+        enabled: cfg[f] !== false,
+      }
+    })
+  })
+
+  ipcMain.handle('mods:set-bundled-enabled', async (_event, fileName: string, enabled: boolean) => {
+    const cfg = loadBundledConfig()
+    cfg[fileName] = enabled
+    saveBundledConfig(cfg)
+    return true
+  })
+
+  async function syncBundledMods(): Promise<void> {
+    const srcDir = getBundledModsDir()
+    const gameDir = getGameDir()
+    const modsDir = path.join(gameDir, 'mods')
+    if (!fs.existsSync(modsDir)) fs.mkdirSync(modsDir, { recursive: true })
+    if (!fs.existsSync(srcDir)) return
+
+    const cfg = loadBundledConfig()
+    const bundledFiles = fs.readdirSync(srcDir).filter(f => f.endsWith('.jar'))
+
+    for (const f of bundledFiles) {
+      const dest = path.join(modsDir, f)
+      if (cfg[f] !== false) {
+        if (!fs.existsSync(dest)) {
+          fs.copyFileSync(path.join(srcDir, f), dest)
+        }
+      } else {
+        if (fs.existsSync(dest)) {
+          fs.unlinkSync(dest)
+        }
+      }
+    }
+  }
+
+  ipcMain.handle('mods:sync-bundled', syncBundledMods)
+
+  // Export for use in game.ts
+  module.exports = { ...module.exports, syncBundledMods }
 }

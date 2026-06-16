@@ -7,6 +7,7 @@ interface Window {
     isMaximized: () => Promise<boolean>
     getAppDataPath: () => Promise<string>
     getAppVersion: () => Promise<string>
+    getAssetPath: (filename: string) => Promise<string>
     openDirectory: () => Promise<string | null>
     openExternal: (url: string) => void
     microsoftLogin: () => Promise<any>
@@ -31,5 +32,14 @@ interface Window {
     searchModrinth: (query: string, type: string) => Promise<any>
     getSettings: () => Promise<any>
     saveSettings: (settings: any) => Promise<boolean>
+    getBundledMods: () => Promise<BundledModInfo[]>
+    setBundledModEnabled: (fileName: string, enabled: boolean) => Promise<boolean>
   }
+}
+
+interface BundledModInfo {
+  fileName: string
+  displayName: string
+  size: number
+  enabled: boolean
 }

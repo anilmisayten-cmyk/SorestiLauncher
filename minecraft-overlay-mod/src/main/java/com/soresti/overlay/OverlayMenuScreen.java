@@ -34,18 +34,19 @@ public class OverlayMenuScreen extends Screen {
         clearChildren();
 
         int by = panelY + 8;
+        int tw = 44;
 
         addDrawableChild(tabBtn("CPS", 0, by, "cps"));
-        addDrawableChild(tabBtn("Keys", 52, by, "keys"));
-        addDrawableChild(tabBtn("Cursor", 104, by, "cursor"));
-        addDrawableChild(tabBtn("Isim", 156, by, "name"));
+        addDrawableChild(tabBtn("Tus", 44, by, "keys"));
+        addDrawableChild(tabBtn("FPS", 88, by, "fps"));
+        addDrawableChild(tabBtn("Ping", 132, by, "ping"));
 
         addDrawableChild(ButtonWidget.builder(
             Text.literal("\u270E KONUM"), b -> {
                 close();
                 OverlayHud.repositionMode = true;
             })
-            .dimensions(panelX + 210, by, 68, 20).build());
+            .dimensions(panelX + 224, by, 68, 20).build());
 
         addDrawableChild(ButtonWidget.builder(Text.literal("X"), b -> close())
             .dimensions(panelX + panelW - 24, by, 18, 20).build());
@@ -58,28 +59,20 @@ public class OverlayMenuScreen extends Screen {
                 cy += 24;
                 addSlider("Boyut", 0.5f, 2f, cfg.cpsScale, cy, v -> { cfg.cpsScale = v; save(); });
                 cy += 22;
-                addDrawableChild(toggle("CPS Graf", cfg.sparkline, cy, v -> { cfg.sparkline = v; save(); rebuild(); }));
+                addDrawableChild(toggle("Graf", cfg.sparkline, cy, v -> { cfg.sparkline = v; save(); rebuild(); }));
             }
             case "keys" -> {
                 addDrawableChild(toggle("Tuslar", cfg.showKeystrokes, cy, v -> { cfg.showKeystrokes = v; save(); rebuild(); }));
                 cy += 24;
                 addSlider("Boyut", 0.5f, 2f, cfg.keysScale, cy, v -> { cfg.keysScale = v; save(); });
                 cy += 22;
-                addSlider("Y Konum", 0f, 300f, cfg.keysY, cy, v -> { cfg.keysY = (int)(float)v; save(); });
+                addSlider("Y-Konum", 0f, 300f, cfg.keysY, cy, v -> { cfg.keysY = (int)(float)v; save(); });
             }
-            case "cursor" -> {
-                addDrawableChild(toggle("Imlec", cfg.showCursor, cy, v -> { cfg.showCursor = v; save(); rebuild(); }));
+            case "fps" -> {
+                addDrawableChild(toggle("FPS", cfg.showFPS, cy, v -> { cfg.showFPS = v; save(); rebuild(); }));
             }
-            case "name" -> {
-                addDrawableChild(toggle("Isim Goster", cfg.showName, cy, v -> { cfg.showName = v; save(); rebuild(); }));
-                cy += 24;
-                addSlider("Boyut", 0.5f, 2f, cfg.nameScale, cy, v -> { cfg.nameScale = v; save(); });
-                cy += 22;
-                addDrawableChild(toggle("Gokkusagi", cfg.nameRainbow, cy, v -> { cfg.nameRainbow = v; save(); rebuild(); }));
-                cy += 24;
-                addDrawableChild(toggle("Oyuncu Isimleri", cfg.showOtherNames, cy, v -> { cfg.showOtherNames = v; save(); rebuild(); }));
-                cy += 24;
-                addDrawableChild(toggle("Onlar Gokkusagi", cfg.otherNameRainbow, cy, v -> { cfg.otherNameRainbow = v; save(); rebuild(); }));
+            case "ping" -> {
+                addDrawableChild(toggle("Ping", cfg.showPing, cy, v -> { cfg.showPing = v; save(); rebuild(); }));
             }
         }
 
@@ -91,7 +84,7 @@ public class OverlayMenuScreen extends Screen {
         return ButtonWidget.builder(
             Text.literal((tab.equals(t) ? ">" : " ") + label),
             b -> { tab = t; rebuild(); })
-            .dimensions(panelX + x, y, 48, 20).build();
+            .dimensions(panelX + x, y, 40, 20).build();
     }
 
     private ButtonWidget toggle(String label, boolean val, int y, Consumer<Boolean> cb) {
@@ -127,12 +120,12 @@ public class OverlayMenuScreen extends Screen {
         String current = switch (tab) {
             case "cps" -> cfg.cpsColor;
             case "keys" -> cfg.keysColor;
-            case "cursor" -> cfg.cursorColor;
-            case "name" -> cfg.nameColor;
+            case "fps" -> cfg.fpsColor;
+            case "ping" -> cfg.pingColor;
             default -> "#ff9800";
         };
 
-        int colLabelY = tab.equals("cursor") || tab.equals("name") ? panelY + 36 : panelY + 82;
+        int colLabelY = tab.equals("fps") || tab.equals("ping") ? panelY + 36 : panelY + 82;
         ctx.drawText(textRenderer, "Renk", colStartX, colLabelY, 0xffffffff, true);
         int colY = colLabelY + 14;
         for (int i = 0; i < PRESETS.length; i++) {
@@ -152,11 +145,11 @@ public class OverlayMenuScreen extends Screen {
         String current = switch (tab) {
             case "cps" -> cfg.cpsColor;
             case "keys" -> cfg.keysColor;
-            case "cursor" -> cfg.cursorColor;
-            case "name" -> cfg.nameColor;
+            case "fps" -> cfg.fpsColor;
+            case "ping" -> cfg.pingColor;
             default -> "#ff9800";
         };
-        int colLabelY = tab.equals("cursor") || tab.equals("name") ? panelY + 36 : panelY + 82;
+        int colLabelY = tab.equals("fps") || tab.equals("ping") ? panelY + 36 : panelY + 82;
         int colY = colLabelY + 14;
         for (int i = 0; i < PRESETS.length; i++) {
             int px = colStartX + i * (colSize + 2);
@@ -165,8 +158,8 @@ public class OverlayMenuScreen extends Screen {
                 switch (tab) {
                     case "cps" -> cfg.cpsColor = clr;
                     case "keys" -> cfg.keysColor = clr;
-                    case "cursor" -> cfg.cursorColor = clr;
-                    case "name" -> cfg.nameColor = clr;
+                    case "fps" -> cfg.fpsColor = clr;
+                    case "ping" -> cfg.pingColor = clr;
                 }
                 save(); rebuild();
                 return true;

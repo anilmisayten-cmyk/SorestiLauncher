@@ -4,10 +4,11 @@ import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.client.util.Window;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.network.PlayerListEntry;
 import org.lwjgl.glfw.GLFW;
-import java.util.List;
+import java.util.Collection;
 
 public class OverlayHud {
     private static final MinecraftClient client = MinecraftClient.getInstance();
@@ -19,7 +20,7 @@ public class OverlayHud {
     private static double dragOffX, dragOffY;
 
     public static void register() {
-        HudRenderCallback.EVENT.register((context, tickDelta) -> {
+        HudRenderCallback.EVENT.register((context, tickCounter) -> {
             var cfg = ConfigManager.get();
             TextRenderer tr = client.textRenderer;
 
@@ -27,18 +28,15 @@ public class OverlayHud {
             hueTimer += (now - lastFrame) / 1000f * 60f;
             lastFrame = now;
 
+            if (cfg.showFPS) drawFPS(context, tr, cfg);
+            if (cfg.showPing) drawPing(context, tr, cfg);
             if (!repositionMode) {
                 if (cfg.showCPS) drawCPS(context, tr, cfg);
                 if (cfg.showKeystrokes) drawKeystrokes(context, tr, cfg);
-                if (cfg.showName) drawName(context, tr, cfg);
-                if (cfg.showOtherNames) drawOtherNames(context, tr, cfg);
-                if (cfg.showCursor) drawCursor(context, tr, cfg);
             } else {
                 handleReposition(cfg);
                 if (cfg.showCPS) drawCPS(context, tr, cfg);
                 if (cfg.showKeystrokes) drawKeystrokes(context, tr, cfg);
-                if (cfg.showName) drawName(context, tr, cfg);
-                if (cfg.showCursor) drawCursor(context, tr, cfg);
                 drawRepositionCursor(context, tr);
                 drawRepositionUI(context, tr);
             }
@@ -70,22 +68,17 @@ public class OverlayHud {
         int sw = scaledWidth();
         float cs = Math.max(0.5f, Math.min(2f, cfg.cpsScale));
         float ks = Math.max(0.5f, Math.min(2f, cfg.keysScale));
-        float ns = Math.max(0.5f, Math.min(2f, cfg.nameScale));
 
         int cpsW = (int)(80 * cs);
         int cpsH = (int)((cfg.sparkline ? 62 : 46) * cs);
         int keysW = (int)(145 * ks);
         int keysH = (int)(135 * ks);
-        int nameW = (int)(100 * ns);
-        int nameH = (int)(24 * ns);
 
         if (dragTarget == null && left) {
             if (mx >= cfg.cpsX && mx <= cfg.cpsX + cpsW && my >= cfg.cpsY && my <= cfg.cpsY + cpsH) {
                 dragTarget = "cps"; dragOffX = mx - cfg.cpsX; dragOffY = my - cfg.cpsY;
             } else if (mx >= sw - 130 * ks && mx <= sw - 130 * ks + keysW && my >= cfg.keysY && my <= cfg.keysY + keysH) {
                 dragTarget = "keys"; dragOffX = mx - (sw - 130 * ks); dragOffY = my - cfg.keysY;
-            } else if (cfg.showName && mx >= cfg.nameX && mx <= cfg.nameX + nameW && my >= cfg.nameY && my <= cfg.nameY + nameH) {
-                dragTarget = "name"; dragOffX = mx - cfg.nameX; dragOffY = my - cfg.nameY;
             }
         }
 
@@ -95,7 +88,6 @@ public class OverlayHud {
             switch (dragTarget) {
                 case "cps" -> { cfg.cpsX = nx; cfg.cpsY = ny; }
                 case "keys" -> { cfg.keysY = ny; }
-                case "name" -> { cfg.nameX = nx; cfg.nameY = ny; }
             }
             ConfigManager.save(cfg);
         }
@@ -136,7 +128,6 @@ public class OverlayHud {
             : switch (dragTarget) {
                 case "cps" -> "CPS surukleniyor...";
                 case "keys" -> "Tuslar surukleniyor...";
-                case "name" -> "Isim surukleniyor...";
                 default -> "";
             };
 
@@ -166,6 +157,44 @@ public class OverlayHud {
             if (hex.length() == 8) return (int) Long.parseLong(hex, 16);
         } catch (Exception ignored) {}
         return fallback;
+    }
+
+    private static void drawFPS(DrawContext ctx, TextRenderer tr, ConfigManager.ConfigData cfg) {
+        int fps = client.getCurrentFps();
+        int baseColor = parseColor(cfg.fpsColor, 0x44ff44);
+        int color = applyRainbow(baseColor, 0, cfg.rainbow);
+
+        String text = fps + " FPS";
+        int tw = tr.getWidth(text);
+        int x = scaledWidth() - tw - 6;
+        int y = 4;
+
+        ctx.fill(x - 2, y - 1, x + tw + 2, y + tr.fontHeight + 1, 0x88000000);
+        ctx.drawText(tr, text, x, y, color, true);
+    }
+
+    private static void drawPing(DrawContext ctx, TextRenderer tr, ConfigManager.ConfigData cfg) {
+        int baseColor = parseColor(cfg.pingColor, 0x44ff44);
+        int color = applyRainbow(baseColor, 60, cfg.rainbow);
+
+        int ping = 0;
+        if (client.getNetworkHandler() != null && client.player != null) {
+            Collection<PlayerListEntry> entries = client.getNetworkHandler().getPlayerList();
+            for (PlayerListEntry e : entries) {
+                if (e.getProfile().getId().equals(client.player.getUuid())) {
+                    ping = e.getLatency();
+                    break;
+                }
+            }
+        }
+
+        String text = ping + " ms";
+        int tw = tr.getWidth(text);
+        int x = scaledWidth() - tw - 6;
+        int y = 4 + tr.fontHeight + 3;
+
+        ctx.fill(x - 2, y - 1, x + tw + 2, y + tr.fontHeight + 1, 0x88000000);
+        ctx.drawText(tr, text, x, y, color, true);
     }
 
     private static void drawCPS(DrawContext ctx, TextRenderer tr, ConfigManager.ConfigData cfg) {
@@ -312,107 +341,5 @@ public class OverlayHud {
         ctx.drawText(tr, label, tx, ty, pressed ? 0xffffffff : 0x99ffffff, true);
     }
 
-    private static void drawName(DrawContext ctx, TextRenderer tr, ConfigManager.ConfigData cfg) {
-        if (client.player == null) return;
-        String name = client.player.getName().getString();
-        int baseColor = parseColor(cfg.nameColor, 0xffff9800);
-        int color = applyRainbow(baseColor, 180, cfg.nameRainbow || cfg.rainbow);
-        float scale = Math.max(0.5f, Math.min(2f, cfg.nameScale));
-        int x = cfg.nameX;
-        int y = cfg.nameY;
-
-        ctx.getMatrices().push();
-        ctx.getMatrices().translate(x, y, 0);
-        ctx.getMatrices().scale(scale, scale, 1);
-
-        int tw = tr.getWidth(name);
-        int pw = tw + 24;
-        int ph = 22;
-
-        int bg = (color & 0x00ffffff) | 0x33000000;
-        int border = (color & 0x00ffffff) | 0xaa000000;
-
-        ctx.fill(0, 0, pw, ph, 0xdd0a0a0f);
-        ctx.fill(0, 0, pw, ph, bg);
-        ctx.fill(0, ph - 1, pw, ph, border);
-        ctx.fill(0, 0, pw, 1, border);
-
-        if (repositionMode) {
-            int dash = (color & 0x00ffffff) | 0x66000000;
-            for (int dd = 0; dd < pw; dd += 6) ctx.fill(dd, 0, Math.min(dd + 3, pw), 1, dash);
-            for (int dd = 0; dd < ph; dd += 6) ctx.fill(pw - 1, dd, pw, Math.min(dd + 3, ph), dash);
-            for (int dd = 0; dd < pw; dd += 6) ctx.fill(dd, ph - 1, Math.min(dd + 3, pw), ph, dash);
-            for (int dd = 0; dd < ph; dd += 6) ctx.fill(0, dd, 1, Math.min(dd + 3, ph), dash);
-        }
-
-        ctx.drawText(tr, name, (pw - tw) / 2, (ph - tr.fontHeight) / 2 + 1, color, true);
-
-        ctx.getMatrices().pop();
-    }
-
-    private static void drawOtherNames(DrawContext ctx, TextRenderer tr, ConfigManager.ConfigData cfg) {
-        if (client.world == null || client.player == null) return;
-        int baseColor = parseColor(cfg.otherNameColor, 0x44ff44);
-        int color = applyRainbow(baseColor, 300, cfg.otherNameRainbow || cfg.rainbow);
-
-        List<AbstractClientPlayerEntity> players = client.world.getPlayers();
-        for (AbstractClientPlayerEntity p : players) {
-            if (p == client.player) continue;
-            String name = p.getName().getString();
-            double dx = p.getX() - client.player.getX();
-            double dy = p.getY() - client.player.getY();
-            double dz = p.getZ() - client.player.getZ();
-            double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-            if (dist > 32) continue;
-
-            int alpha = (int)Math.max(40, 255 - dist * 7);
-            int textColor = (color & 0x00ffffff) | (alpha << 24);
-
-            int sx = (int)((dx / dist) * 40) + scaledWidth() / 2;
-            int sy = (int)((-dy / dist) * 20 + scaledHeight() / 2 - 10);
-            sy = Math.max(10, Math.min(scaledHeight() - 20, sy));
-
-            ctx.drawText(tr, name, sx - tr.getWidth(name) / 2, sy, textColor, true);
-        }
-    }
-
     private static boolean prevLeft = false;
-
-    private static void drawCursor(DrawContext ctx, TextRenderer tr, ConfigManager.ConfigData cfg) {
-        int baseColor = parseColor(cfg.cursorColor, 0xffff9800);
-        int color = applyRainbow(baseColor, 240, cfg.rainbow);
-
-        int sw = scaledWidth();
-        int sh = scaledHeight();
-        int cx = sw / 2;
-        int cy = sh / 2;
-
-        boolean nowLeft = client.options.attackKey.isPressed();
-        boolean clicked = nowLeft && !prevLeft;
-        prevLeft = nowLeft;
-
-        int r = clicked ? 14 : 9;
-        int pulseR = clicked ? 26 : 0;
-
-        int fillCol = (color & 0x00ffffff) | 0x22000000;
-        int borderCol = (color & 0x00ffffff) | 0xcc000000;
-
-        if (pulseR > 0) {
-            int fade = (color & 0x00ffffff) | 0x22000000;
-            for (int dy = -pulseR; dy <= pulseR; dy++) {
-                int dx = (int) Math.sqrt(pulseR * pulseR - dy * dy);
-                ctx.fill(cx - dx, cy + dy, cx + dx, cy + dy + 1, fade);
-            }
-            ctx.fill(cx - pulseR, cy, cx + pulseR, cy + 1, (color & 0x00ffffff) | 0x55000000);
-            ctx.fill(cx, cy - pulseR, cx + 1, cy + pulseR, (color & 0x00ffffff) | 0x55000000);
-        }
-
-        for (int dy = -r; dy <= r; dy++) {
-            int dx = (int) Math.sqrt(r * r - dy * dy);
-            ctx.fill(cx - dx, cy + dy, cx + dx, cy + dy + 1, fillCol);
-        }
-
-        ctx.fill(cx - r, cy, cx + r, cy + 1, borderCol);
-        ctx.fill(cx, cy - r, cx + 1, cy + r, borderCol);
-    }
 }

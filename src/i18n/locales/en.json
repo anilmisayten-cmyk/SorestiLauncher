@@ -145,6 +145,7 @@
     "downloadFailed": "Download failed",
     "modDeleted": "{{fileName}} deleted",
     "deleteFailed": "Delete failed",
+    "bundledMods": "Bundled Mods · Toggle on/off",
     "modalBy": "by",
     "modalNoVersion": "No version found",
     "modalNoVersionFilter": "No versions found for {{gameVersion}}. Remove filter?",

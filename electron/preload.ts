@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // App info
   getAppDataPath: () => ipcRenderer.invoke('get-app-data-path'),
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+  getAssetPath: (filename: string) => ipcRenderer.invoke('get-asset-path', filename),
 
   // Dialogs
   openDirectory: () => ipcRenderer.invoke('dialog:openDirectory'),
@@ -62,6 +63,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openModsFolder: () => ipcRenderer.invoke('mods:open-folder'),
   onModProgress: (callback: (data: any) => void) => ipcRenderer.on('mods:progress', (_e, data) => callback(data)),
   onModDone: (callback: (data: any) => void) => ipcRenderer.on('mods:done', (_e, data) => callback(data)),
+  // Bundled Soresti mods
+  getBundledMods: () => ipcRenderer.invoke('mods:get-bundled'),
+  setBundledModEnabled: (fileName: string, enabled: boolean) => ipcRenderer.invoke('mods:set-bundled-enabled', fileName, enabled),
   // Fabric
   getFabricLoaders: (gameVersion: string) => ipcRenderer.invoke('fabric:get-loaders', gameVersion),
   installFabric: (gameVersion: string, loaderVersion: string) => ipcRenderer.invoke('fabric:install', gameVersion, loaderVersion),
