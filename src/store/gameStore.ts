@@ -9,14 +9,12 @@ interface DownloadProgress {
 }
 
 interface GameState {
-  selectedVersion: string
   installedVersions: string[]
   isRunning: boolean
   isDownloading: boolean
   downloadProgress: DownloadProgress | null
   logs: string[]
 
-  setSelectedVersion: (v: string) => void
   setInstalledVersions: (v: string[]) => void
   setRunning: (v: boolean) => void
   setDownloading: (v: boolean) => void
@@ -27,14 +25,12 @@ interface GameState {
 }
 
 export const useGameStore = create<GameState>((set) => ({
-  selectedVersion: '',
   installedVersions: [],
   isRunning: false,
   isDownloading: false,
   downloadProgress: null,
   logs: [],
 
-  setSelectedVersion: (v) => set({ selectedVersion: v }),
   setInstalledVersions: (v) => set({ installedVersions: v }),
   setRunning: (v) => set({ isRunning: v }),
   setDownloading: (v) => set({ isDownloading: v }),

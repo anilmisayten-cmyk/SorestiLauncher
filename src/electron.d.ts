@@ -18,6 +18,7 @@ interface Window {
     installVersion: (versionId: string) => Promise<any>
     getInstalledVersions: () => Promise<string[]>
     deleteVersion: (versionId: string) => Promise<boolean>
+    ensureFabric: (gameVersion: string) => Promise<any>
     launchGame: (options: any) => Promise<any>
     killGame: () => void
     onDownloadProgress: (cb: (data: any) => void) => void
@@ -30,15 +31,5 @@ interface Window {
     searchModrinth: (query: string, type: string) => Promise<any>
     getSettings: () => Promise<any>
     saveSettings: (settings: any) => Promise<boolean>
-
-    // Overlay
-    overlayToggle: () => void
-    overlayShow: () => void
-    overlayHide: () => void
-    onOverlayInput: (cb: (data: any) => void) => void
-    onOverlayMenu: (cb: (open: boolean) => void) => void
-    getOverlaySettings: () => Promise<any>
-    saveOverlaySettings: (s: any) => Promise<boolean>
-    onOverlaySettingsChanged: (cb: (s: any) => void) => void
   }
 }

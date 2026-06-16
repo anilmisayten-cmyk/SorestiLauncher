@@ -195,8 +195,8 @@ export function registerDownloadHandlers() {
     catch { return [] }
   })
 
-  ipcMain.handle('game:install-version', async (_event, versionId: string) => {
-    const win = BrowserWindow.getAllWindows()[0]
+  ipcMain.handle('game:install-version', async (event, versionId: string) => {
+    const win = BrowserWindow.fromWebContents(event.sender) || BrowserWindow.getAllWindows().find(w => !w.isDestroyed())
     const gameDir = getGameDir()
     const versionDir = path.join(gameDir, 'versions', versionId)
     const nativesDir = path.join(versionDir, 'natives')

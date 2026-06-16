@@ -7,13 +7,16 @@ import { useGameStore } from '../store/gameStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { useToast } from '../App'
 
+const MC_VERSION = '1.21.4'
+
 export default function HomePage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { currentAccount } = useAuthStore()
   const {
-    selectedVersion, installedVersions, isRunning, isDownloading,
-    downloadProgress, setRunning, loadInstalledVersions
+    installedVersions, isRunning, isDownloading,
+    downloadProgress, setRunning, loadInstalledVersions,
+    setDownloading, setDownloadProgress
   } = useGameStore()
   const { settings, load: loadSettings } = useSettingsStore()
   const { toast } = useToast()
@@ -21,6 +24,7 @@ export default function HomePage() {
   const [javaLoading, setJavaLoading] = useState(true)
   const [playtime, setPlaytime] = useState(0)
   const [playTimer, setPlayTimer] = useState<NodeJS.Timeout | null>(null)
+  const [installing, setInstalling] = useState(false)
 
   useEffect(() => {
     loadInstalledVersions()
@@ -35,9 +39,25 @@ export default function HomePage() {
       if (playTimer) clearInterval(playTimer)
       toast(code === 0 ? t('home.gameClosed') : t('home.gameClosedWithCode', { code }), code === 0 ? 'info' : 'warning')
     })
+    window.electronAPI.onDownloadComplete((id) => {
+      if (id === MC_VERSION) {
+        setInstalling(false)
+        setDownloading(false)
+        setDownloadProgress(null)
+        loadInstalledVersions()
+        toast(`Minecraft ${MC_VERSION} yüklendi!`, 'success')
+      }
+    })
+    window.electronAPI.onDownloadProgress((data) => {
+      if (data.versionId === MC_VERSION) {
+        setDownloadProgress(data)
+      }
+    })
     return () => {
       window.electronAPI.removeAllListeners('game:log')
       window.electronAPI.removeAllListeners('game:exit')
+      window.electronAPI.removeAllListeners('download:complete')
+      window.electronAPI.removeAllListeners('download:progress')
     }
   }, [])
 
@@ -53,6 +73,21 @@ export default function HomePage() {
     }
   }
 
+  // Check pre-bundled files on mount
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      await loadInstalledVersions()
+      // Ensure Fabric + overlay mod is set up from bundled assets
+      try {
+        const result = await window.electronAPI.ensureFabric(MC_VERSION)
+        if (!result.alreadyInstalled) {
+          toast('Fabric + Overlay kuruldu!', 'success')
+        }
+      } catch {}
+    }, 1000)
+    return () => clearTimeout(timer)
+  }, [])
+
   const handlePlay = async () => {
     if (isRunning) {
       window.electronAPI.killGame()
@@ -61,9 +96,8 @@ export default function HomePage() {
       return
     }
 
-    if (!selectedVersion) {
-      toast(t('home.selectVersionFirst'), 'warning')
-      navigate('/versions')
+    if (!installedVersions.includes(MC_VERSION)) {
+      toast(`Önce Minecraft ${MC_VERSION} yüklenmeli`, 'warning')
       return
     }
 
@@ -71,7 +105,7 @@ export default function HomePage() {
       toast(t('home.javaNotFound'), 'error')
       return
     }
-    // settings.javaPath yoksa backend kendi otomatik Java'yı (ensureJava) indirecek ve kullanacak.
+
     const javaPath = settings.javaPath?.trim() || ''
 
     try {
@@ -81,7 +115,7 @@ export default function HomePage() {
       setPlayTimer(timer)
 
       await window.electronAPI.launchGame({
-        versionId: selectedVersion,
+        versionId: MC_VERSION,
         accountUUID: currentAccount!.uuid,
         accountUsername: currentAccount!.username,
         accountType: currentAccount!.type,
@@ -105,8 +139,6 @@ export default function HomePage() {
     return t('home.timeSeconds', { sec })
   }
 
-  const displayVersion = selectedVersion || (installedVersions[0] ?? null)
-
   return (
     <div className="page fade-in">
       {/* Hero */}
@@ -114,12 +146,10 @@ export default function HomePage() {
         <div className="home-hero-bg" />
         <div className="home-hero-grid" />
         <div className="home-hero-content">
-          {displayVersion && (
-            <div className="hero-selected-version">
-              <span className="badge badge-release">{t('home.selected')}</span>
-              <span>{displayVersion}</span>
-            </div>
-          )}
+          <div className="hero-selected-version">
+            <span className="badge badge-release">Oynanıyor</span>
+            <span>Minecraft {MC_VERSION}</span>
+          </div>
           <div className="hero-title">
             {t('home.heroReady')} <span>{t('home.heroEmphasis')}</span><br />
             {t('home.heroQuestion')}
@@ -131,21 +161,15 @@ export default function HomePage() {
             <button
               className={`play-btn ${isRunning ? 'playing' : ''}`}
               onClick={handlePlay}
-              disabled={isDownloading}
+              disabled={installing || isDownloading}
             >
               {isRunning ? <><Square size={18} fill="white" /> {t('home.stop')}</> : <><Play size={18} fill="black" /> {t('home.play')}</>}
             </button>
 
-            {!selectedVersion && (
-              <button className="btn btn-secondary" onClick={() => navigate('/versions')}>
-                <Download size={14} /> {t('home.selectVersion')}
-              </button>
-            )}
-
-            {isDownloading && downloadProgress && (
+            {(installing || isDownloading) && downloadProgress && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, maxWidth: 280 }}>
                 <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                  {downloadProgress.task}
+                  {downloadProgress.task || 'Minecraft 1.21.4 indiriliyor...'}
                 </div>
                 <div className="progress-bar">
                   <div className="progress-fill" style={{ width: `${downloadProgress.percent}%` }} />
@@ -159,7 +183,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Warnings - Artık sadece elle girilen hatalı yolları veya genel sistem uyarılarını vereceğiz ama Java otomatik indiği için bu uyarıyı büyük oranda kaldırabiliriz, şimdilik Java yolu boşsa uyarı vermiyoruz çünkü auto-java devrede. */}
+      {/* Java uyarısı */}
       {!javaLoading && javaStatus !== null && !javaStatus.found && settings.javaPath && settings.javaPath.trim() !== '' && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px',
@@ -174,9 +198,9 @@ export default function HomePage() {
       {/* Stats */}
       <div className="stats-row">
         <div className="card stat-card">
-          <div className="stat-label"><Layers size={11} style={{ display: 'inline', marginRight: 4 }} />{t('home.version')}</div>
-          <div className="stat-value">{displayVersion ?? '—'}</div>
-          <div className="stat-sub">{t('home.versionsInstalled', { count: installedVersions.length })}</div>
+          <div className="stat-label">Sürüm</div>
+          <div className="stat-value">{MC_VERSION}</div>
+          <div className="stat-sub">{installedVersions.includes(MC_VERSION) ? '✅ Yüklü' : '⬇ Yükleniyor...'}</div>
         </div>
         <div className="card stat-card">
           <div className="stat-label"><Cpu size={11} style={{ display: 'inline', marginRight: 4 }} />{t('home.java')}</div>
@@ -201,18 +225,6 @@ export default function HomePage() {
 
       {/* Quick actions */}
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-        <div className="card" style={{ padding: '16px 20px', flex: 1, cursor: 'pointer' }}
-          onClick={() => navigate('/versions')}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--accent-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Layers size={16} color="var(--accent)" />
-            </div>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 700 }}>{t('home.quickVersions')}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('home.quickVersionsSub', { count: installedVersions.length })}</div>
-            </div>
-          </div>
-        </div>
         <div className="card" style={{ padding: '16px 20px', flex: 1, cursor: 'pointer' }}
           onClick={() => navigate('/mods')}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -240,10 +252,6 @@ export default function HomePage() {
       </div>
     </div>
   )
-}
-
-function Layers(props: any) {
-  return <svg xmlns="http://www.w3.org/2000/svg" width={props.size ?? 16} height={props.size ?? 16} viewBox="0 0 24 24" fill="none" stroke={props.color ?? 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={props.style}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
 }
 
 function Package(props: any) {

@@ -3,3 +3,11 @@ dist/
 release/
 *.log
 .DS_Store
+.gradle/
+minecraft-overlay-mod/.gradle/
+minecraft-overlay-mod/build/
+
+# Minecraft bundled assets (copyrighted, too large)
+assets/vanilla-setup/
+assets/fabric-setup/
+assets/sorestioverlay.jar

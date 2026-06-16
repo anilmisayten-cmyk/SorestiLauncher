@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
-  Home, Layers, Package, Terminal, Settings,
+  Home, Package, Terminal, Settings,
   LogOut, ChevronRight, Cpu, User, UserPlus, ChevronDown
 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
@@ -21,7 +21,6 @@ export default function Sidebar() {
 
   const navItems = [
     { path: '/', icon: Home, label: t('sidebar.home') },
-    { path: '/versions', icon: Layers, label: t('sidebar.versions') },
     { path: '/mods', icon: Package, label: t('sidebar.mods') },
     { path: '/skin', icon: User, label: t('sidebar.skin') },
     { path: '/console', icon: Terminal, label: t('sidebar.console') },
@@ -46,7 +45,6 @@ export default function Sidebar() {
 
   return (
     <aside className="sidebar">
-      {/* User */}
       <div className="sidebar-user" onClick={() => setShowSwitcher(true)} title={t('sidebar.switchAccount')}>
         <div className="sidebar-avatar">{avatarLetter}</div>
         <div className="sidebar-user-info">
@@ -69,7 +67,6 @@ export default function Sidebar() {
         />
       )}
 
-      {/* Nav */}
       <nav className="sidebar-nav">
         <div className="nav-section-label">{t('sidebar.menu')}</div>
         {navItems.map(item => (

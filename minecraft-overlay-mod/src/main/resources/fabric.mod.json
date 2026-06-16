@@ -1,0 +1,22 @@
+{
+    "schemaVersion": 1,
+    "id": "sorestioverlay",
+    "version": "${version}",
+    "name": "Soresti Overlay",
+    "description": "CPS, keystrokes, custom cursor and overlay for Soresti Launcher",
+    "authors": ["Soresti"],
+    "contact": {},
+    "license": "MIT",
+    "icon": "assets/sorestioverlay/icon.png",
+    "environment": "client",
+    "entrypoints": {
+        "client": ["com.soresti.overlay.SorestiOverlayMod"]
+    },
+    "mixins": ["sorestioverlay.mixins.json"],
+    "depends": {
+        "fabricloader": ">=0.16.10",
+        "fabric-api": ">=0.110.0",
+        "minecraft": "~1.21.4",
+        "java": ">=21"
+    }
+}

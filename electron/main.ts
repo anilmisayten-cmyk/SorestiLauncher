@@ -7,7 +7,8 @@ import { registerDownloadHandlers } from './ipc/download'
 import { registerJavaHandlers } from './ipc/java'
 import { registerSettingsHandlers } from './ipc/settings'
 import { registerModsHandlers } from './ipc/mods'
-import { overlayManager } from './overlay'
+import { initDiscord, destroyDiscord } from './ipc/discord'
+// Overlay handled by Fabric mod in-game
 
 let mainWindow: BrowserWindow | null = null
 let splashWindow: BrowserWindow | null = null
@@ -106,10 +107,9 @@ ipcMain.on('open-external', (_event, url: string) => {
   shell.openExternal(url)
 })
 
-// Overlay
-ipcMain.on('overlay:toggle', () => overlayManager.toggle())
-ipcMain.on('overlay:show', () => overlayManager.show())
-ipcMain.on('overlay:hide', () => overlayManager.hide())
+// Overlay (legacy — now handled by Fabric mod in-game)
+// IPC handlers kept for settings API compatibility
+
 
 // Get app data path
 ipcMain.handle('get-app-data-path', () => {
@@ -123,12 +123,125 @@ ipcMain.handle('get-app-version', () => app.getVersion())
     showMainWindow()
   })
 
+function setupBundledGame() {
+  const flagPath = path.join(app.getPath('appData'), 'SorestiLauncher', '.bundled-setup-done')
+  if (fs.existsSync(flagPath)) return // already done once
+
+  try {
+    const gameDir = path.join(app.getPath('appData'), 'SorestiLauncher', 'minecraft')
+    const assetsDir = path.join(__dirname, '../../assets')
+
+    // Copy vanilla 1.21.4 JAR + JSON
+    const vanillaSrc = path.join(assetsDir, 'vanilla-setup')
+    const versionsDir = path.join(gameDir, 'versions', '1.21.4')
+    if (fs.existsSync(path.join(vanillaSrc, '1.21.4.jar'))) {
+      if (!fs.existsSync(versionsDir)) fs.mkdirSync(versionsDir, { recursive: true })
+      for (const file of ['1.21.4.jar', '1.21.4.json']) {
+        const src = path.join(vanillaSrc, file)
+        if (fs.existsSync(src)) fs.copyFileSync(src, path.join(versionsDir, file))
+      }
+      const idxSrc = path.join(vanillaSrc, 'assets', 'indexes')
+      const idxDest = path.join(gameDir, 'assets', 'indexes')
+      if (fs.existsSync(idxSrc)) {
+        if (!fs.existsSync(idxDest)) fs.mkdirSync(idxDest, { recursive: true })
+        for (const f of fs.readdirSync(idxSrc)) fs.copyFileSync(path.join(idxSrc, f), path.join(idxDest, f))
+      }
+    }
+
+    // Copy vanilla libraries
+    const vanillaLibsSrc = path.join(vanillaSrc, 'libraries')
+    if (fs.existsSync(vanillaLibsSrc)) {
+      const copyDir = (src: string, dest: string) => {
+        if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true })
+        for (const e of fs.readdirSync(src, { withFileTypes: true })) {
+          const s = path.join(src, e.name), d = path.join(dest, e.name)
+          if (e.isDirectory()) copyDir(s, d)
+          else if (!fs.existsSync(d)) fs.copyFileSync(s, d)
+        }
+      }
+      copyDir(vanillaLibsSrc, path.join(gameDir, 'libraries'))
+    }
+
+    // Copy asset objects (icons, textures, sounds, fonts)
+    const objSrc = path.join(vanillaSrc, 'assets', 'objects')
+    const objDest = path.join(gameDir, 'assets', 'objects')
+    if (fs.existsSync(objSrc)) {
+      if (!fs.existsSync(objDest)) fs.mkdirSync(objDest, { recursive: true })
+      const copyDir = (src: string, dest: string) => {
+        for (const e of fs.readdirSync(src, { withFileTypes: true })) {
+          const s = path.join(src, e.name), d = path.join(dest, e.name)
+          if (e.isDirectory()) { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); copyDir(s, d) }
+          else if (!fs.existsSync(d)) fs.copyFileSync(s, d)
+        }
+      }
+      copyDir(objSrc, objDest)
+    }
+
+    // Copy Fabric profile + libraries + overlay mod
+    const fabricSrc = path.join(assetsDir, 'fabric-setup')
+    if (fs.existsSync(path.join(fabricSrc, 'profile.json'))) {
+      const profile = JSON.parse(fs.readFileSync(path.join(fabricSrc, 'profile.json'), 'utf-8'))
+      const fabricVersionId = profile.id
+      const fvDir = path.join(gameDir, 'versions', fabricVersionId)
+      if (!fs.existsSync(fvDir)) fs.mkdirSync(fvDir, { recursive: true })
+      if (!fs.existsSync(path.join(fvDir, `${fabricVersionId}.json`)))
+        fs.writeFileSync(path.join(fvDir, `${fabricVersionId}.json`), JSON.stringify(profile, null, 2))
+      if (!fs.existsSync(path.join(fvDir, `${fabricVersionId}.jar`)))
+        fs.writeFileSync(path.join(fvDir, `${fabricVersionId}.jar`), '')
+
+      const bundledLibs = path.join(fabricSrc, 'libraries')
+      const libsDir = path.join(gameDir, 'libraries')
+      if (fs.existsSync(bundledLibs)) {
+        const copyDir = (src: string, dest: string) => {
+          if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true })
+          for (const e of fs.readdirSync(src, { withFileTypes: true })) {
+            const s = path.join(src, e.name), d = path.join(dest, e.name)
+            if (e.isDirectory()) copyDir(s, d)
+            else if (!fs.existsSync(d)) fs.copyFileSync(s, d)
+          }
+        }
+        copyDir(bundledLibs, libsDir)
+      }
+
+      const modsDir = path.join(gameDir, 'mods')
+      const bundledMods = path.join(fabricSrc, 'mods')
+      if (fs.existsSync(bundledMods)) {
+        if (!fs.existsSync(modsDir)) fs.mkdirSync(modsDir, { recursive: true })
+        for (const f of fs.readdirSync(bundledMods)) {
+          const dest = path.join(modsDir, f)
+          fs.copyFileSync(path.join(bundledMods, f), dest)
+        }
+      }
+    }
+
+    // Copy bundled resource packs to game resourcepacks folder
+    const respacksSrc = path.join(assetsDir, 'respacks')
+    const respacksDest = path.join(gameDir, 'resourcepacks')
+    if (fs.existsSync(respacksSrc)) {
+      if (!fs.existsSync(respacksDest)) fs.mkdirSync(respacksDest, { recursive: true })
+      for (const f of fs.readdirSync(respacksSrc)) {
+        const src = path.join(respacksSrc, f)
+        const dest = path.join(respacksDest, f)
+        if (fs.statSync(src).isFile()) fs.copyFileSync(src, dest)
+      }
+    }
+
+    // Mark done
+    fs.writeFileSync(flagPath, Date.now().toString())
+  } catch (e: any) {
+    console.error('[setup] Bundled setup failed:', e.message)
+  }
+}
+
 app.whenReady().then(() => {
   // Ensure app data dir exists
   const appDataPath = path.join(app.getPath('appData'), 'SorestiLauncher')
   if (!fs.existsSync(appDataPath)) {
     fs.mkdirSync(appDataPath, { recursive: true })
   }
+
+  // Copy pre-downloaded game files (vanilla + Fabric + mod) from bundled assets
+  setupBundledGame()
 
   createWindow()
   createSplashWindow()
@@ -138,7 +251,8 @@ app.whenReady().then(() => {
   registerJavaHandlers()
   registerSettingsHandlers()
   registerModsHandlers()
-  overlayManager.startShiftWatcher()
+  initDiscord()
+  // Overlay now runs as a Fabric mod inside Minecraft
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -149,5 +263,6 @@ app.whenReady().then(() => {
 })
 
 app.on('window-all-closed', () => {
+  destroyDiscord()
   if (process.platform !== 'darwin') app.quit()
 })

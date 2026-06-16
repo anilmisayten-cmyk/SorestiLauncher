@@ -83,8 +83,8 @@ export function registerModsHandlers() {
   })
 
   // ─── Download a mod JAR into mods/ folder ───
-  ipcMain.handle('mods:download', async (_event, downloadUrl: string, fileName: string, versionId: string) => {
-    const win = BrowserWindow.getAllWindows()[0]
+  ipcMain.handle('mods:download', async (event, downloadUrl: string, fileName: string, versionId: string) => {
+    const win = BrowserWindow.fromWebContents(event.sender) || BrowserWindow.getAllWindows().find(w => !w.isDestroyed())
     const gameDir = getGameDir()
     const modsDir = path.join(gameDir, 'mods')
     if (!fs.existsSync(modsDir)) fs.mkdirSync(modsDir, { recursive: true })
@@ -142,8 +142,8 @@ export function registerModsHandlers() {
   })
 
   // ─── Fabric: Install loader ───
-  ipcMain.handle('fabric:install', async (_event, gameVersion: string, loaderVersion: string) => {
-    const win = BrowserWindow.getAllWindows()[0]
+  ipcMain.handle('fabric:install', async (event, gameVersion: string, loaderVersion: string) => {
+    const win = BrowserWindow.fromWebContents(event.sender) || BrowserWindow.getAllWindows().find(w => !w.isDestroyed())
     const gameDir = getGameDir()
     const fabricVersionId = `fabric-loader-${loaderVersion}-${gameVersion}`
     const versionDir = path.join(gameDir, 'versions', fabricVersionId)
@@ -194,9 +194,29 @@ export function registerModsHandlers() {
     const dummyJar = path.join(versionDir, `${fabricVersionId}.jar`)
     if (!fs.existsSync(dummyJar)) fs.writeFileSync(dummyJar, '')
 
+    // Copy Soresti Overlay mod
+    const overlaySrc = path.join(__dirname, '../../assets/sorestioverlay.jar')
+    const modsDir = path.join(gameDir, 'mods')
+    if (!fs.existsSync(modsDir)) fs.mkdirSync(modsDir, { recursive: true })
+    const overlayDest = path.join(modsDir, 'sorestioverlay.jar')
+    if (fs.existsSync(overlaySrc) && !fs.existsSync(overlayDest)) {
+      fs.copyFileSync(overlaySrc, overlayDest)
+    }
+
     win?.webContents.send('mods:progress', { fileName: fabricVersionId, percent: 100, downloaded: 0, total: 100 })
     win?.webContents.send('mods:done', { fileName: fabricVersionId })
 
     return { success: true, versionId: fabricVersionId }
+  })
+
+  // ─── Check Fabric already installed (bundled setup does this once at startup) ───
+  ipcMain.handle('game:ensure-fabric', async (event, gameVersion: string) => {
+    const gameDir = getGameDir()
+    const versionsDir = path.join(gameDir, 'versions')
+    if (fs.existsSync(versionsDir)) {
+      const existing = fs.readdirSync(versionsDir).find(v => v.startsWith('fabric-loader-') && v.endsWith('-' + gameVersion))
+      if (existing) return { success: true, alreadyInstalled: true, versionId: existing }
+    }
+    return { success: false, reason: 'fabric_not_setup' }
   })
 }

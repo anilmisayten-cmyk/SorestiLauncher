@@ -65,23 +65,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Fabric
   getFabricLoaders: (gameVersion: string) => ipcRenderer.invoke('fabric:get-loaders', gameVersion),
   installFabric: (gameVersion: string, loaderVersion: string) => ipcRenderer.invoke('fabric:install', gameVersion, loaderVersion),
+  ensureFabric: (gameVersion: string) => ipcRenderer.invoke('game:ensure-fabric', gameVersion),
 
   // Settings
   getSettings: () => ipcRenderer.invoke('settings:get'),
   saveSettings: (settings: AppSettings) => ipcRenderer.invoke('settings:save', settings),
 
-  // Overlay
-  overlayToggle: () => ipcRenderer.send('overlay:toggle'),
-  overlayShow: () => ipcRenderer.send('overlay:show'),
-  overlayHide: () => ipcRenderer.send('overlay:hide'),
-  onOverlayInput: (callback: (data: any) => void) =>
-    ipcRenderer.on('overlay:input', (_e, data) => callback(data)),
-  onOverlayMenu: (callback: (open: boolean) => void) =>
-    ipcRenderer.on('overlay:menu', (_e, open) => callback(open)),
-  getOverlaySettings: () => ipcRenderer.invoke('overlay:get-settings'),
-  saveOverlaySettings: (s: any) => ipcRenderer.invoke('overlay:save-settings', s),
-  onOverlaySettingsChanged: (cb: (s: any) => void) =>
-    ipcRenderer.on('overlay:settings-updated', (_e, s) => cb(s)),
+  // Overlay handled by Fabric mod in-game (no Electron overlay)
 })
 
 interface LaunchOptions {

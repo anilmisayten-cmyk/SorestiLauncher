@@ -5,7 +5,6 @@ import TitleBar from './components/TitleBar'
 import Sidebar from './components/Sidebar'
 import LoginPage from './pages/LoginPage'
 import HomePage from './pages/HomePage'
-import VersionsPage from './pages/VersionsPage'
 import ModsPage from './pages/ModsPage'
 import SettingsPage from './pages/SettingsPage'
 import ConsolePage from './pages/ConsolePage'
@@ -33,21 +32,6 @@ export default function App() {
     loadAccounts()
   }, [])
 
-  // Auto-install Minecraft 1.21.4 on first launch
-  useEffect(() => {
-    const install = async () => {
-      try {
-        const installed = await window.electronAPI.getInstalledVersions()
-        if (!installed.includes('1.21.4')) {
-          toast('Minecraft 1.21.4 indiriliyor...', 'info')
-          await window.electronAPI.installVersion('1.21.4')
-          toast('Minecraft 1.21.4 yüklendi!', 'success')
-        }
-      } catch {}
-    }
-    install()
-  }, [])
-
   useEffect(() => {
     if (settings.language && settings.language !== i18n.language) {
       i18n.changeLanguage(settings.language)
@@ -67,7 +51,6 @@ export default function App() {
               {currentAccount ? (
                 <Routes>
                   <Route path="/" element={<HomePage />} />
-                  <Route path="/versions" element={<VersionsPage />} />
                   <Route path="/mods" element={<ModsPage />} />
                   <Route path="/skin" element={<SkinPage />} />
                   <Route path="/console" element={<ConsolePage />} />
