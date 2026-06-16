@@ -131,6 +131,13 @@ function setupBundledGame() {
   const flagPath = path.join(app.getPath('appData'), 'SorestiLauncher', '.bundled-setup-done')
   if (fs.existsSync(flagPath)) return // already done once
 
+  // Online mode: skip bundled copy, first launch will download everything
+  const onlineFlagPath = path.join(__dirname, '../../assets/.online-mode')
+  if (fs.existsSync(onlineFlagPath)) {
+    fs.writeFileSync(flagPath, Date.now().toString())
+    return
+  }
+
   try {
     const gameDir = path.join(app.getPath('appData'), 'SorestiLauncher', 'minecraft')
     const assetsDir = path.join(__dirname, '../../assets')
@@ -237,6 +244,47 @@ function setupBundledGame() {
   }
 }
 
+async function setupOnlineGame() {
+  const flagPath = path.join(app.getPath('appData'), 'SorestiLauncher', '.online-setup-done')
+  if (fs.existsSync(flagPath)) return
+
+  const onlineFlagPath = path.join(__dirname, '../../assets/.online-mode')
+  if (!fs.existsSync(onlineFlagPath)) return
+
+  try {
+    const gameDir = path.join(app.getPath('appData'), 'SorestiLauncher', 'minecraft')
+    const assetsDir = path.join(__dirname, '../../assets')
+
+    // Copy bundled resource packs
+    const respacksSrc = path.join(assetsDir, 'respacks')
+    const respacksDest = path.join(gameDir, 'resourcepacks')
+    if (fs.existsSync(respacksSrc)) {
+      if (!fs.existsSync(respacksDest)) fs.mkdirSync(respacksDest, { recursive: true })
+      for (const f of fs.readdirSync(respacksSrc)) {
+        const src = path.join(respacksSrc, f)
+        const dest = path.join(respacksDest, f)
+        if (fs.statSync(src).isFile() && !fs.existsSync(dest)) fs.copyFileSync(src, dest)
+      }
+    }
+
+    // Copy bundled mods
+    const bundledMods = path.join(assetsDir, 'fabric-setup', 'mods')
+    const modsDir = path.join(gameDir, 'mods')
+    if (fs.existsSync(bundledMods)) {
+      if (!fs.existsSync(modsDir)) fs.mkdirSync(modsDir, { recursive: true })
+      for (const f of fs.readdirSync(bundledMods)) {
+        const dest = path.join(modsDir, f)
+        if (!fs.existsSync(dest)) fs.copyFileSync(path.join(bundledMods, f), dest)
+      }
+    }
+
+    fs.writeFileSync(flagPath, Date.now().toString())
+    console.log('[online] Mods + resource packs copied. Vanilla + Fabric will download on first launch.')
+  } catch (e: any) {
+    console.error('[online] Setup failed:', e.message)
+  }
+}
+
 app.whenReady().then(() => {
   // Ensure app data dir exists
   const appDataPath = path.join(app.getPath('appData'), 'SorestiLauncher')
@@ -246,6 +294,7 @@ app.whenReady().then(() => {
 
   // Copy pre-downloaded game files (vanilla + Fabric + mod) from bundled assets
   setupBundledGame()
+  setupOnlineGame()
 
   createWindow()
   createSplashWindow()

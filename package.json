@@ -16,7 +16,8 @@
     "build:preload": "webpack --config webpack.preload.js --mode production",
     "start": "npm run build && electron .",
     "electron": "electron .",
-    "dist": "npm run build && electron-builder --win"
+    "dist": "npm run build && electron-builder --win",
+    "dist:online": "npm run build && node build-online.js"
   },
   "dependencies": {
     "@types/adm-zip": "^0.5.8",

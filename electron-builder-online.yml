@@ -1,0 +1,35 @@
+appId: com.soresti.launcher
+productName: "Soresti Launcher Online"
+copyright: "Copyright © 2024 Soresti Team"
+directories:
+  output: release-online
+files:
+  - "dist/**/*"
+  - "assets/**/*"
+  - "!assets/vanilla-setup/**/*"
+  - "!assets/fabric-setup/libraries/**/*"
+  - "!assets/fabric-setup/*.json"
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: assets/icon.ico
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: "Soresti Launcher Online"
+  installerIcon: assets/icon.ico
+  uninstallerIcon: assets/icon.ico
+  license: null
+  include: build/installer.nsh
+extraResources:
+  - from: assets/
+    to: assets/
+    filter:
+      - "**/*"
+      - "!vanilla-setup/**/*"
+      - "!fabric-setup/libraries/**/*"
+      - "!fabric-setup/*.json"
